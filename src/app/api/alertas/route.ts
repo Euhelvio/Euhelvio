@@ -21,6 +21,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }
 
-  const id = criarAlerta(parsed.data.email, parsed.data.filtros);
+  const id = await criarAlerta(parsed.data.email, parsed.data.filtros);
   return NextResponse.json({ id }, { status: 201 });
 }

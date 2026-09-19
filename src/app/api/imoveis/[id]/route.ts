@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const imovel = buscarImovelPorId(Number(id));
+  const imovel = await buscarImovelPorId(Number(id));
 
   if (!imovel) {
     return NextResponse.json({ erro: "Imóvel não encontrado" }, { status: 404 });

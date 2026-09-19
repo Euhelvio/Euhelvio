@@ -16,7 +16,7 @@ export async function POST(
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }
 
-  const alterado = confirmarImovel(Number(id), parsed.data.fonteContato);
+  const alterado = await confirmarImovel(Number(id), parsed.data.fonteContato);
 
   if (!alterado) {
     return NextResponse.json(

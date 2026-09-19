@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const quartos = params.get("quartos") ? Number(params.get("quartos")) : undefined;
   const aceitaPet = params.get("aceitaPet") === "1";
 
-  const imoveis = listarImoveis({ tipoOperacao, municipio, precoMin, precoMax, quartos, aceitaPet });
+  const imoveis = await listarImoveis({ tipoOperacao, municipio, precoMin, precoMax, quartos, aceitaPet });
   return NextResponse.json({ imoveis });
 }
 
@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
   }
 
   const { fonteNome, fonteContato, ...dadosImovel } = parsed.data;
-  const fonteId = criarFonteOuReutilizar(fonteNome, fonteContato);
-  const id = criarImovel({ ...dadosImovel, fonteId });
+  const fonteId = await criarFonteOuReutilizar(fonteNome, fonteContato);
+  const id = await criarImovel({ ...dadosImovel, fonteId });
 
   return NextResponse.json({ id }, { status: 201 });
 }

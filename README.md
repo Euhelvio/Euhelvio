@@ -11,6 +11,28 @@ integração via feed para parceiros, painel do parceiro e marcação automátic
 de anúncios desatualizados. O plano completo do produto (escopo, modelo de
 negócio, arquitetura, roadmap) está no documento de planejamento do projeto.
 
+## Configuração do banco (Supabase)
+
+A aplicação precisa de um Postgres — o plano usa **Supabase** (grátis para
+este volume). Passo a passo:
+
+1. Crie uma conta e um projeto em https://supabase.com
+2. No projeto, vá em **Project Settings > Database > Connection string**
+3. Copie a URI no formato **"Transaction pooler"** (recomendado — funciona
+   bem tanto local quanto na Vercel, que roda em ambiente serverless)
+4. Copie `.env.example` para `.env.local` e cole a connection string em
+   `DATABASE_URL`, substituindo `[YOUR-PASSWORD]` pela senha do banco que
+   você definiu ao criar o projeto
+
+```bash
+cp .env.example .env.local
+# edite .env.local com a connection string do seu projeto Supabase
+```
+
+Não é preciso criar tabelas manualmente: na primeira conexão, a aplicação
+cria o schema (`CREATE TABLE IF NOT EXISTS`) e popula ~19 imóveis fictícios
+de exemplo, se o banco estiver vazio.
+
 ## Rodando localmente
 
 ```bash
@@ -29,10 +51,13 @@ Acesse http://localhost:3000.
 - `/parceiros/painel?contato=...` — painel do parceiro: seus imóveis, leads
   recebidos e confirmação de anúncios marcados como "verificar"
 
-Na primeira execução, o banco de dados local é criado em `data/app.db` e
-populado com ~18 imóveis fictícios espalhados pelos municípios núcleo do MVP
-(Florianópolis, São José, Palhoça, Biguaçu, Santo Amaro da Imperatriz,
-Governador Celso Ramos e Águas Mornas), cobrindo os quatro tipos de operação.
+## Deploy na Vercel
+
+1. Importe o repositório na Vercel (você já tem conta)
+2. Em **Project Settings > Environment Variables**, adicione `DATABASE_URL`
+   com a mesma connection string do Supabase (necessária também em build
+   time, pois a página de busca é pré-renderizada)
+3. Deploy — pronto, o link já é público
 
 ## Scripts de manutenção (workers agendados)
 
@@ -56,11 +81,11 @@ O formato do feed de parceiro está documentado em
 ## Stack
 
 - **Next.js (App Router) + TypeScript + Tailwind CSS**
-- **SQLite (better-sqlite3)** como camada de dados do MVP — zero configuração
-  externa para começar a desenvolver. O modelo de dados (`src/lib/db.ts`)
-  já segue as entidades do planejamento (Imóvel, Fonte/Parceiro, Lead, Alerta)
-  e foi desenhado para migrar para **PostgreSQL + PostGIS (Supabase/Neon)**
-  quando a busca geoespacial e o volume de dados justificarem.
+- **PostgreSQL (Supabase)** via `pg`, sem ORM — o modelo de dados
+  (`src/lib/db.ts`) segue as entidades do planejamento (Imóvel, Fonte/Parceiro,
+  Lead, Alerta). O schema é criado automaticamente na primeira conexão.
+  Busca geoespacial por raio/área desenhada (PostGIS) é um upgrade natural
+  quando isso entrar no roadmap — hoje o filtro geográfico é por município.
 - **Leaflet + OpenStreetMap** para o mapa interativo (sem custo de API key)
 - **Zod** para validação dos formulários/API
 - **tsx** para rodar os scripts de manutenção em TypeScript
@@ -84,7 +109,7 @@ src/
       alertas/route.ts               # POST de alerta de busca salva
   components/                        # busca, mapa, cartões, formulários, painel
   lib/
-    db.ts                            # schema SQLite, seed e queries
+    db.ts                            # conexão Postgres, schema, seed e queries
     types.ts                         # tipos compartilhados
 scripts/
   importar-feed.ts                   # ingestão via feed de parceiro (upsert)
@@ -103,13 +128,15 @@ exemplos/
 - **Painel do parceiro não tem autenticação real** — o acesso é só pelo
   contato cadastrado, adequado para um piloto com poucos parceiros de
   confiança, não para produção com muitos parceiros.
-- **SQLite local**, não compartilhado entre múltiplas instâncias/ambientes —
-  ok para o MVP fechado, migrar para Supabase/Neon antes de qualquer
-  deploy com mais de um servidor.
+- **Cobrança por lead ainda não é automática** — o modelo de negócio do
+  plano (comissão por lead) está registrado (tabela `leads`), mas não há
+  integração com processador de pagamento; combine com os parceiros-piloto
+  por fora enquanto valida.
 
 ## Próximos passos técnicos (fora deste MVP)
 
 - Autenticação real do parceiro (login/senha ou magic link) no painel
 - Envio real de e-mail de alerta (Resend/Postmark) e push
-- Migrar a camada de dados para Supabase/Neon com PostGIS
+- Cobrança automática por lead (Asaas/Pagar.me/Stripe)
 - Deduplicação automática de anúncios entre múltiplas fontes
+- Busca geoespacial por raio/área desenhada com PostGIS

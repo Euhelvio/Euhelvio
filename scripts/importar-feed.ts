@@ -7,6 +7,7 @@
  *
  * Uso: npm run importar-feed -- --file exemplos/feed-parceiro-exemplo.json
  */
+import "./_env";
 import fs from "fs";
 import { z } from "zod";
 import { criarFonteOuReutilizar, criarOuAtualizarImovelViaFeed } from "../src/lib/db";
@@ -47,18 +48,18 @@ function lerArgumentoArquivo(): string {
   return process.argv[idx + 1];
 }
 
-function main() {
+async function main() {
   const caminho = lerArgumentoArquivo();
   const conteudo = JSON.parse(fs.readFileSync(caminho, "utf-8"));
   const feed = feedSchema.parse(conteudo);
 
-  const fonteId = criarFonteOuReutilizar(feed.parceiro.nome, feed.parceiro.contato);
+  const fonteId = await criarFonteOuReutilizar(feed.parceiro.nome, feed.parceiro.contato);
 
   let criados = 0;
   let atualizados = 0;
 
   for (const item of feed.imoveis) {
-    const { criado } = criarOuAtualizarImovelViaFeed({ ...item, fonteId });
+    const { criado } = await criarOuAtualizarImovelViaFeed({ ...item, fonteId });
     if (criado) criados++;
     else atualizados++;
   }
@@ -68,4 +69,4 @@ function main() {
   );
 }
 
-main();
+main().then(() => process.exit(0));

@@ -35,9 +35,8 @@ export default async function ComparadorImoveis({
     .filter((v) => Number.isInteger(v) && v > 0)
     .slice(0, 4);
 
-  const imoveis = idsNumericos
-    .map((id) => buscarImovelPorId(id))
-    .filter((i): i is Imovel => i !== null);
+  const encontrados = await Promise.all(idsNumericos.map((id) => buscarImovelPorId(id)));
+  const imoveis = encontrados.filter((i): i is Imovel => i !== null);
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 md:p-6">

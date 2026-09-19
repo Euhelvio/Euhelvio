@@ -12,7 +12,7 @@ export default async function ImovelDetalhe({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const imovel = buscarImovelPorId(Number(id));
+  const imovel = await buscarImovelPorId(Number(id));
 
   if (!imovel) {
     notFound();

@@ -18,11 +18,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }
 
-  const imovel = buscarImovelPorId(parsed.data.imovelId);
+  const imovel = await buscarImovelPorId(parsed.data.imovelId);
   if (!imovel) {
     return NextResponse.json({ erro: "Imóvel não encontrado" }, { status: 404 });
   }
 
-  const id = criarLead(parsed.data);
+  const id = await criarLead(parsed.data);
   return NextResponse.json({ id }, { status: 201 });
 }

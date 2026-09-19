@@ -50,8 +50,10 @@ export default async function PainelParceiro({
 }
 
 async function ConteudoPainel({ contato }: { contato: string }) {
-  const imoveis = listarImoveisPorFonteContato(contato);
-  const leads = listarLeadsPorFonteContato(contato);
+  const [imoveis, leads] = await Promise.all([
+    listarImoveisPorFonteContato(contato),
+    listarLeadsPorFonteContato(contato),
+  ]);
 
   if (imoveis.length === 0) {
     return (

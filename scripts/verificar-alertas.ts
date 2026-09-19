@@ -11,6 +11,7 @@
  *
  * Uso: npm run verificar-alertas
  */
+import "./_env";
 import {
   buscarNovosImoveisParaAlerta,
   listarAlertas,
@@ -28,17 +29,17 @@ function notificar(email: string, imoveis: Imovel[]) {
   }
 }
 
-function main() {
-  const alertas = listarAlertas();
+async function main() {
+  const alertas = await listarAlertas();
   let notificacoesEnviadas = 0;
 
   for (const alerta of alertas) {
-    const novos = buscarNovosImoveisParaAlerta(alerta);
+    const novos = await buscarNovosImoveisParaAlerta(alerta);
     if (novos.length > 0) {
       notificar(alerta.email, novos);
       notificacoesEnviadas++;
     }
-    marcarEnvioAlerta(alerta.id);
+    await marcarEnvioAlerta(alerta.id);
   }
 
   console.log(
@@ -46,4 +47,4 @@ function main() {
   );
 }
 
-main();
+main().then(() => process.exit(0));

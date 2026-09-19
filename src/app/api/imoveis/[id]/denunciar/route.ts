@@ -6,7 +6,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const alterado = denunciarDesatualizado(Number(id));
+  const alterado = await denunciarDesatualizado(Number(id));
 
   if (!alterado) {
     return NextResponse.json(

@@ -5,6 +5,7 @@
  *
  * Uso: npm run marcar-verificar -- --dias 30
  */
+import "./_env";
 import { marcarInativosParaVerificar } from "../src/lib/db";
 
 function lerDias(): number {
@@ -13,12 +14,12 @@ function lerDias(): number {
   return Number.isFinite(valor) && valor > 0 ? valor : 30;
 }
 
-function main() {
+async function main() {
   const dias = lerDias();
-  const alterados = marcarInativosParaVerificar(dias);
+  const alterados = await marcarInativosParaVerificar(dias);
   console.log(
     `${alterados} imóvel(is) sem atualização há mais de ${dias} dias marcado(s) como "verificar".`
   );
 }
 
-main();
+main().then(() => process.exit(0));
