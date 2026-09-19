@@ -1,0 +1,42 @@
+{
+  "parceiro": {
+    "nome": "Imobiliária Exemplo Feed",
+    "contato": "(48) 99400-4040"
+  },
+  "imoveis": [
+    {
+      "externalRef": "FEED-001",
+      "titulo": "Apto 2 quartos no Itacorubi",
+      "tipoOperacao": "aluguel",
+      "municipio": "Florianópolis",
+      "bairro": "Itacorubi",
+      "endereco": "Rua João Motta Espezim, 210",
+      "lat": -27.5822,
+      "lng": -48.5069,
+      "preco": 2100,
+      "quartos": 2,
+      "banheiros": 1,
+      "areaM2": 58,
+      "aceitaPet": true,
+      "mobiliado": false,
+      "descricao": "Próximo ao Beira-Mar Continental e à UFSC, prédio novo com elevador."
+    },
+    {
+      "externalRef": "FEED-002",
+      "titulo": "Casa 3 quartos no Bela Vista, Palhoça",
+      "tipoOperacao": "venda",
+      "municipio": "Palhoça",
+      "bairro": "Bela Vista",
+      "endereco": "Rua das Camélias, 88",
+      "lat": -27.6455,
+      "lng": -48.6689,
+      "preco": 550000,
+      "quartos": 3,
+      "banheiros": 2,
+      "areaM2": 120,
+      "aceitaPet": true,
+      "mobiliado": false,
+      "descricao": "Casa em condomínio fechado, próxima à Via Expressa."
+    }
+  ]
+}

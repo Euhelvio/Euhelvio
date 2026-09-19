@@ -4,6 +4,7 @@ import { formatarPrecoImovel } from "@/lib/format";
 import { TIPOS_OPERACAO } from "@/lib/types";
 import ContatoForm from "@/components/ContatoForm";
 import MapaUnico from "@/components/MapaUnico";
+import StatusImovel from "@/components/StatusImovel";
 
 export default async function ImovelDetalhe({
   params,
@@ -19,6 +20,12 @@ export default async function ImovelDetalhe({
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-4 md:p-6">
+      <StatusImovel
+        imovelId={imovel.id}
+        status={imovel.status}
+        atualizadoEm={imovel.atualizadoEm}
+      />
+
       <div>
         <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
           {TIPOS_OPERACAO.find((t) => t.valor === imovel.tipoOperacao)?.rotulo}

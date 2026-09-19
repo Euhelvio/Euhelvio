@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
-import type { Imovel } from "./types";
+import type { Alerta, FiltrosBusca, Imovel, Lead } from "./types";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DB_PATH = path.join(DATA_DIR, "app.db");
@@ -40,8 +40,14 @@ db.exec(`
     descricao TEXT NOT NULL DEFAULT '',
     status TEXT NOT NULL DEFAULT 'disponivel',
     fonte_id INTEGER NOT NULL REFERENCES fontes(id),
-    criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+    external_ref TEXT,
+    criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+    atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_imoveis_fonte_external
+    ON imoveis(fonte_id, external_ref)
+    WHERE external_ref IS NOT NULL;
 
   CREATE TABLE IF NOT EXISTS leads (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,6 +57,14 @@ db.exec(`
     telefone TEXT NOT NULL DEFAULT '',
     mensagem TEXT NOT NULL DEFAULT '',
     criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS alertas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    filtros TEXT NOT NULL DEFAULT '{}',
+    criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+    ultimo_envio TEXT
   );
 `);
 
@@ -75,7 +89,9 @@ type ImovelRow = {
   status: string;
   fonte_id: number;
   fonte_nome: string;
+  external_ref: string | null;
   criado_em: string;
+  atualizado_em: string;
 };
 
 export function rowToImovel(row: ImovelRow): Imovel {
@@ -99,6 +115,7 @@ export function rowToImovel(row: ImovelRow): Imovel {
     fonteId: row.fonte_id,
     fonteNome: row.fonte_nome,
     criadoEm: row.criado_em,
+    atualizadoEm: row.atualizado_em,
   };
 }
 
@@ -157,15 +174,8 @@ function seedIfEmpty() {
   insertMany(seed);
 }
 
-export function listarImoveis(filtros: {
-  tipoOperacao?: string;
-  municipio?: string;
-  precoMin?: number;
-  precoMax?: number;
-  quartos?: number;
-  aceitaPet?: boolean;
-}): Imovel[] {
-  const condicoes: string[] = ["i.status != 'removido'"];
+export function listarImoveis(filtros: FiltrosBusca): Imovel[] {
+  const condicoes: string[] = ["i.status = 'disponivel'"];
   const params: Record<string, unknown> = {};
 
   if (filtros.tipoOperacao) {
@@ -258,6 +268,135 @@ export function criarImovel(dados: {
   return info.lastInsertRowid as number;
 }
 
+/**
+ * Upsert usado pela ingestão via feed de parceiro (Onda 2 da estratégia de dados):
+ * casa por (fonteId, externalRef) — mesmo imóvel reenviado no feed atualiza em vez de duplicar.
+ */
+export function criarOuAtualizarImovelViaFeed(dados: {
+  externalRef: string;
+  titulo: string;
+  tipoOperacao: string;
+  municipio: string;
+  bairro: string;
+  endereco: string;
+  lat: number;
+  lng: number;
+  preco: number;
+  quartos: number;
+  banheiros: number;
+  areaM2: number;
+  aceitaPet: boolean;
+  mobiliado: boolean;
+  descricao: string;
+  fonteId: number;
+}): { id: number; criado: boolean } {
+  const existente = db
+    .prepare("SELECT id FROM imoveis WHERE fonte_id = ? AND external_ref = ?")
+    .get(dados.fonteId, dados.externalRef) as { id: number } | undefined;
+
+  const valores = {
+    ...dados,
+    aceitaPet: dados.aceitaPet ? 1 : 0,
+    mobiliado: dados.mobiliado ? 1 : 0,
+  };
+
+  if (existente) {
+    db.prepare(
+      `UPDATE imoveis SET
+        titulo = @titulo, tipo_operacao = @tipoOperacao, municipio = @municipio, bairro = @bairro,
+        endereco = @endereco, lat = @lat, lng = @lng, preco = @preco, quartos = @quartos,
+        banheiros = @banheiros, area_m2 = @areaM2, aceita_pet = @aceitaPet, mobiliado = @mobiliado,
+        descricao = @descricao, status = 'disponivel', atualizado_em = datetime('now')
+       WHERE id = @id`
+    ).run({ ...valores, id: existente.id });
+    return { id: existente.id, criado: false };
+  }
+
+  const info = db
+    .prepare(
+      `INSERT INTO imoveis
+        (titulo, tipo_operacao, municipio, bairro, endereco, lat, lng, preco, quartos, banheiros, area_m2, aceita_pet, mobiliado, descricao, fonte_id, external_ref)
+       VALUES (@titulo, @tipoOperacao, @municipio, @bairro, @endereco, @lat, @lng, @preco, @quartos, @banheiros, @areaM2, @aceitaPet, @mobiliado, @descricao, @fonteId, @externalRef)`
+    )
+    .run(valores);
+  return { id: info.lastInsertRowid as number, criado: true };
+}
+
+export function marcarInativosParaVerificar(diasLimite: number): number {
+  const info = db
+    .prepare(
+      `UPDATE imoveis SET status = 'verificar'
+       WHERE status = 'disponivel' AND atualizado_em < datetime('now', @janela)`
+    )
+    .run({ janela: `-${diasLimite} days` });
+  return info.changes;
+}
+
+export function denunciarDesatualizado(imovelId: number): boolean {
+  const info = db
+    .prepare("UPDATE imoveis SET status = 'verificar' WHERE id = ? AND status = 'disponivel'")
+    .run(imovelId);
+  return info.changes > 0;
+}
+
+export function confirmarImovel(imovelId: number, fonteContato: string): boolean {
+  const info = db
+    .prepare(
+      `UPDATE imoveis SET status = 'disponivel', atualizado_em = datetime('now')
+       WHERE id = @id AND fonte_id IN (SELECT id FROM fontes WHERE contato = @contato)`
+    )
+    .run({ id: imovelId, contato: fonteContato });
+  return info.changes > 0;
+}
+
+export function listarImoveisPorFonteContato(contato: string): Imovel[] {
+  const rows = db
+    .prepare(
+      `SELECT i.*, f.nome as fonte_nome FROM imoveis i
+       JOIN fontes f ON f.id = i.fonte_id
+       WHERE f.contato = ?
+       ORDER BY i.criado_em DESC`
+    )
+    .all(contato) as ImovelRow[];
+  return rows.map(rowToImovel);
+}
+
+type LeadRow = {
+  id: number;
+  imovel_id: number;
+  nome: string;
+  email: string;
+  telefone: string;
+  mensagem: string;
+  criado_em: string;
+  imovel_titulo: string;
+};
+
+export function listarLeadsPorFonteContato(
+  contato: string
+): (Lead & { imovelTitulo: string })[] {
+  const rows = db
+    .prepare(
+      `SELECT l.*, i.titulo as imovel_titulo FROM leads l
+       JOIN imoveis i ON i.id = l.imovel_id
+       JOIN fontes f ON f.id = i.fonte_id
+       WHERE f.contato = ?
+       ORDER BY l.criado_em DESC`
+    )
+    .all(contato) as LeadRow[];
+
+  return rows.map((row) => ({
+    id: row.id,
+    imovelId: row.imovel_id,
+    nome: row.nome,
+    email: row.email,
+    telefone: row.telefone,
+    mensagem: row.mensagem,
+    criadoEm: row.criado_em,
+    imovelTitulo: row.imovel_titulo,
+  }));
+}
+
 export function criarLead(dados: {
   imovelId: number;
   nome: string;
@@ -272,6 +411,78 @@ export function criarLead(dados: {
     )
     .run(dados);
   return info.lastInsertRowid as number;
+}
+
+type AlertaRow = {
+  id: number;
+  email: string;
+  filtros: string;
+  criado_em: string;
+  ultimo_envio: string | null;
+};
+
+function rowToAlerta(row: AlertaRow): Alerta {
+  return {
+    id: row.id,
+    email: row.email,
+    filtros: JSON.parse(row.filtros) as FiltrosBusca,
+    criadoEm: row.criado_em,
+    ultimoEnvio: row.ultimo_envio,
+  };
+}
+
+export function criarAlerta(email: string, filtros: FiltrosBusca): number {
+  const info = db
+    .prepare("INSERT INTO alertas (email, filtros) VALUES (?, ?)")
+    .run(email, JSON.stringify(filtros));
+  return info.lastInsertRowid as number;
+}
+
+export function listarAlertas(): Alerta[] {
+  const rows = db.prepare("SELECT * FROM alertas ORDER BY criado_em DESC").all() as AlertaRow[];
+  return rows.map(rowToAlerta);
+}
+
+/** Imóveis que casam com o filtro do alerta e foram criados desde o último envio (ou desde a criação do alerta). */
+export function buscarNovosImoveisParaAlerta(alerta: Alerta): Imovel[] {
+  const desde = alerta.ultimoEnvio ?? alerta.criadoEm;
+  const condicoes: string[] = ["i.status = 'disponivel'", "i.criado_em > @desde"];
+  const params: Record<string, unknown> = { desde };
+
+  if (alerta.filtros.tipoOperacao) {
+    condicoes.push("i.tipo_operacao = @tipoOperacao");
+    params.tipoOperacao = alerta.filtros.tipoOperacao;
+  }
+  if (alerta.filtros.municipio) {
+    condicoes.push("i.municipio = @municipio");
+    params.municipio = alerta.filtros.municipio;
+  }
+  if (alerta.filtros.precoMax !== undefined) {
+    condicoes.push("i.preco <= @precoMax");
+    params.precoMax = alerta.filtros.precoMax;
+  }
+  if (alerta.filtros.quartos !== undefined) {
+    condicoes.push("i.quartos >= @quartos");
+    params.quartos = alerta.filtros.quartos;
+  }
+  if (alerta.filtros.aceitaPet) {
+    condicoes.push("i.aceita_pet = 1");
+  }
+
+  const rows = db
+    .prepare(
+      `SELECT i.*, f.nome as fonte_nome FROM imoveis i
+       JOIN fontes f ON f.id = i.fonte_id
+       WHERE ${condicoes.join(" AND ")}
+       ORDER BY i.criado_em DESC`
+    )
+    .all(params) as ImovelRow[];
+
+  return rows.map(rowToImovel);
+}
+
+export function marcarEnvioAlerta(id: number): void {
+  db.prepare("UPDATE alertas SET ultimo_envio = datetime('now') WHERE id = ?").run(id);
 }
 
 export default db;

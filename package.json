@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "importar-feed": "tsx scripts/importar-feed.ts",
+    "marcar-verificar": "tsx scripts/marcar-verificar.ts",
+    "verificar-alertas": "tsx scripts/verificar-alertas.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
@@ -27,6 +30,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5"
   }
 }

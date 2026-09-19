@@ -35,7 +35,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               Buscar imóveis
             </Link>
             <Link href="/parceiros/cadastrar" className="hover:underline">
-              Sou imobiliária/corretor
+              Cadastrar imóvel
+            </Link>
+            <Link href="/parceiros/painel" className="hover:underline">
+              Painel do parceiro
             </Link>
           </nav>
         </header>

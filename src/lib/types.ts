@@ -20,6 +20,7 @@ export interface Imovel {
   fonteId: number;
   fonteNome: string;
   criadoEm: string;
+  atualizadoEm: string;
 }
 
 export interface Lead {
@@ -33,11 +34,20 @@ export interface Lead {
 }
 
 export interface FiltrosBusca {
+  tipoOperacao?: string;
   municipio?: string;
   precoMin?: number;
   precoMax?: number;
   quartos?: number;
   aceitaPet?: boolean;
+}
+
+export interface Alerta {
+  id: number;
+  email: string;
+  filtros: FiltrosBusca;
+  criadoEm: string;
+  ultimoEnvio: string | null;
 }
 
 export const TIPOS_OPERACAO: { valor: TipoOperacao; rotulo: string }[] = [

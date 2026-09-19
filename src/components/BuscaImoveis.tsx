@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import ImovelCard from "./ImovelCard";
-import type { Imovel } from "@/lib/types";
+import AlertaForm from "./AlertaForm";
+import type { FiltrosBusca, Imovel } from "@/lib/types";
 import { MUNICIPIOS_MVP, TIPOS_OPERACAO } from "@/lib/types";
 
 const MapView = dynamic(() => import("./MapView"), {
@@ -55,6 +56,14 @@ export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imo
     buscar();
     return () => controller.abort();
   }, [tipoOperacao, municipio, precoMax, quartos, aceitaPet]);
+
+  const filtrosAtuais: FiltrosBusca = {
+    tipoOperacao: tipoOperacao || undefined,
+    municipio: municipio || undefined,
+    precoMax: precoMax ? Number(precoMax) : undefined,
+    quartos: quartos ? Number(quartos) : undefined,
+    aceitaPet: aceitaPet || undefined,
+  };
 
   function alternarComparacao(id: number) {
     setSelecionados((atual) => {
@@ -139,6 +148,8 @@ export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imo
           {carregando ? "Buscando…" : `${imoveis.length} imóvel(is) encontrado(s)`}
         </p>
       </div>
+
+      <AlertaForm filtros={filtrosAtuais} />
 
       {selecionados.length > 0 && (
         <div className="flex items-center justify-between rounded-lg border border-zinc-900 bg-zinc-900 px-4 py-2 text-sm text-white dark:border-white dark:bg-white dark:text-zinc-900">
