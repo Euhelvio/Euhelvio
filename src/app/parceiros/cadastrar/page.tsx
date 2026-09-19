@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MUNICIPIOS_MVP } from "@/lib/types";
+import { MUNICIPIOS_MVP, TIPOS_OPERACAO } from "@/lib/types";
+import type { TipoOperacao } from "@/lib/types";
 
 const estadoInicial = {
   titulo: "",
-  tipoOperacao: "aluguel" as const,
+  tipoOperacao: "aluguel" as TipoOperacao,
   municipio: MUNICIPIOS_MVP[0] as string,
   bairro: "",
   endereco: "",
@@ -92,12 +93,13 @@ export default function CadastrarImovel() {
               <select
                 className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
                 value={form.tipoOperacao}
-                onChange={(e) => atualizar("tipoOperacao", e.target.value as typeof form.tipoOperacao)}
+                onChange={(e) => atualizar("tipoOperacao", e.target.value as TipoOperacao)}
               >
-                <option value="aluguel">Aluguel residencial</option>
-                <option value="venda">Compra e venda</option>
-                <option value="comercial">Comercial</option>
-                <option value="temporada">Temporada</option>
+                {TIPOS_OPERACAO.map((t) => (
+                  <option key={t.valor} value={t.valor}>
+                    {t.rotulo}
+                  </option>
+                ))}
               </select>
             </label>
             <label className="flex flex-col text-sm">
@@ -169,7 +171,7 @@ export default function CadastrarImovel() {
 
           <div className="grid grid-cols-2 gap-3">
             <label className="flex flex-col text-sm">
-              Preço (R$/mês)
+              Preço (R${form.tipoOperacao === "venda" ? "" : "/mês"})
               <input
                 required
                 type="number"

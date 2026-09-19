@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import ImovelCard from "./ImovelCard";
 import type { Imovel } from "@/lib/types";
-import { MUNICIPIOS_MVP } from "@/lib/types";
+import { MUNICIPIOS_MVP, TIPOS_OPERACAO } from "@/lib/types";
 
 const MapView = dynamic(() => import("./MapView"), {
   ssr: false,
@@ -15,17 +16,22 @@ const MapView = dynamic(() => import("./MapView"), {
   ),
 });
 
+const MAX_COMPARACAO = 4;
+
 export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imovel[] }) {
   const [imoveis, setImoveis] = useState(imoveisIniciais);
   const [carregando, setCarregando] = useState(false);
+  const [tipoOperacao, setTipoOperacao] = useState("");
   const [municipio, setMunicipio] = useState("");
   const [precoMax, setPrecoMax] = useState("");
   const [quartos, setQuartos] = useState("");
   const [aceitaPet, setAceitaPet] = useState(false);
+  const [selecionados, setSelecionados] = useState<number[]>([]);
 
   useEffect(() => {
     const controller = new AbortController();
     const params = new URLSearchParams();
+    if (tipoOperacao) params.set("tipoOperacao", tipoOperacao);
     if (municipio) params.set("municipio", municipio);
     if (precoMax) params.set("precoMax", precoMax);
     if (quartos) params.set("quartos", quartos);
@@ -48,11 +54,35 @@ export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imo
 
     buscar();
     return () => controller.abort();
-  }, [municipio, precoMax, quartos, aceitaPet]);
+  }, [tipoOperacao, municipio, precoMax, quartos, aceitaPet]);
+
+  function alternarComparacao(id: number) {
+    setSelecionados((atual) => {
+      if (atual.includes(id)) return atual.filter((i) => i !== id);
+      if (atual.length >= MAX_COMPARACAO) return atual;
+      return [...atual, id];
+    });
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
       <div className="flex flex-wrap items-end gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+        <label className="flex flex-col text-sm">
+          Tipo de operação
+          <select
+            className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+            value={tipoOperacao}
+            onChange={(e) => setTipoOperacao(e.target.value)}
+          >
+            <option value="">Todos</option>
+            {TIPOS_OPERACAO.map((t) => (
+              <option key={t.valor} value={t.valor}>
+                {t.rotulo}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <label className="flex flex-col text-sm">
           Município
           <select
@@ -70,7 +100,7 @@ export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imo
         </label>
 
         <label className="flex flex-col text-sm">
-          Preço máximo (R$/mês)
+          Preço máximo (R$)
           <input
             type="number"
             min={0}
@@ -110,6 +140,28 @@ export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imo
         </p>
       </div>
 
+      {selecionados.length > 0 && (
+        <div className="flex items-center justify-between rounded-lg border border-zinc-900 bg-zinc-900 px-4 py-2 text-sm text-white dark:border-white dark:bg-white dark:text-zinc-900">
+          <span>
+            {selecionados.length} imóvel(is) selecionado(s) para comparar (máx. {MAX_COMPARACAO})
+          </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSelecionados([])}
+              className="underline underline-offset-2"
+            >
+              Limpar
+            </button>
+            <Link
+              href={`/comparar?ids=${selecionados.join(",")}`}
+              className="rounded bg-white px-3 py-1 font-medium text-zinc-900 dark:bg-zinc-900 dark:text-white"
+            >
+              Comparar
+            </Link>
+          </div>
+        </div>
+      )}
+
       <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="flex flex-col gap-3 overflow-y-auto lg:max-h-[70vh]">
           {imoveis.length === 0 && !carregando && (
@@ -118,7 +170,12 @@ export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imo
             </p>
           )}
           {imoveis.map((imovel) => (
-            <ImovelCard key={imovel.id} imovel={imovel} />
+            <ImovelCard
+              key={imovel.id}
+              imovel={imovel}
+              comparando={selecionados.includes(imovel.id)}
+              onToggleComparar={alternarComparacao}
+            />
           ))}
         </div>
         <div className="min-h-[400px] lg:sticky lg:top-4 lg:h-[70vh]">

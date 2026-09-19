@@ -112,7 +112,7 @@ function seedIfEmpty() {
   const insertImovel = db.prepare(`
     INSERT INTO imoveis
       (titulo, tipo_operacao, municipio, bairro, endereco, lat, lng, preco, quartos, banheiros, area_m2, aceita_pet, mobiliado, descricao, fonte_id)
-    VALUES (@titulo, 'aluguel', @municipio, @bairro, @endereco, @lat, @lng, @preco, @quartos, @banheiros, @areaM2, @aceitaPet, @mobiliado, @descricao, @fonteId)
+    VALUES (@titulo, @tipoOperacao, @municipio, @bairro, @endereco, @lat, @lng, @preco, @quartos, @banheiros, @areaM2, @aceitaPet, @mobiliado, @descricao, @fonteId)
   `);
 
   const fontes = [
@@ -123,21 +123,25 @@ function seedIfEmpty() {
   const fonteIds = fontes.map((f) => insertFonte.run(f.nome, f.contato).lastInsertRowid as number);
 
   const seed = [
-    { titulo: "Apto 2 quartos próximo à UFSC", municipio: "Florianópolis", bairro: "Trindade", endereco: "Rua Lauro Linhares, 500", lat: -27.5847, lng: -48.5223, preco: 2400, quartos: 2, banheiros: 1, areaM2: 62, aceitaPet: 1, mobiliado: 0, descricao: "Apartamento reformado a 10 minutos a pé da UFSC, ótimo para estudantes." },
-    { titulo: "Kitnet mobiliada no Centro", municipio: "Florianópolis", bairro: "Centro", endereco: "Rua Felipe Schmidt, 200", lat: -27.5954, lng: -48.548, preco: 1600, quartos: 1, banheiros: 1, areaM2: 28, aceitaPet: 0, mobiliado: 1, descricao: "Kitnet mobiliada, pronta para morar, próxima ao terminal urbano." },
-    { titulo: "Casa 3 quartos na Lagoa da Conceição", municipio: "Florianópolis", bairro: "Lagoa da Conceição", endereco: "Servidão dos Pescadores, 45", lat: -27.6068, lng: -48.459, preco: 4800, quartos: 3, banheiros: 2, areaM2: 140, aceitaPet: 1, mobiliado: 0, descricao: "Casa térrea com quintal, a 5 minutos da Lagoa." },
-    { titulo: "Apto 1 quarto em Coqueiros", municipio: "Florianópolis", bairro: "Coqueiros", endereco: "Av. Governador Ivo Silveira, 800", lat: -27.589, lng: -48.572, preco: 1950, quartos: 1, banheiros: 1, areaM2: 45, aceitaPet: 0, mobiliado: 0, descricao: "Vista parcial para o mar, prédio com portaria 24h." },
-    { titulo: "Apto 2 quartos no Campeche", municipio: "Florianópolis", bairro: "Campeche", endereco: "Rua Pequeno Príncipe, 120", lat: -27.6767, lng: -48.489, preco: 2200, quartos: 2, banheiros: 1, areaM2: 58, aceitaPet: 1, mobiliado: 0, descricao: "A 8 quadras da praia do Campeche, condomínio com piscina." },
-    { titulo: "Casa 4 quartos em Canasvieiras", municipio: "Florianópolis", bairro: "Canasvieiras", endereco: "Rua das Gaivotas, 300", lat: -27.431, lng: -48.466, preco: 3600, quartos: 4, banheiros: 3, areaM2: 180, aceitaPet: 1, mobiliado: 0, descricao: "Ideal para temporada longa em família, próxima à praia." },
-    { titulo: "Apto 3 quartos nos Ingleses", municipio: "Florianópolis", bairro: "Ingleses", endereco: "Rua das Bromélias, 90", lat: -27.433, lng: -48.395, preco: 2900, quartos: 3, banheiros: 2, areaM2: 90, aceitaPet: 0, mobiliado: 1, descricao: "Mobiliado, a 3 quadras da praia dos Ingleses." },
-    { titulo: "Apto 2 quartos no Centro de São José", municipio: "São José", bairro: "Centro", endereco: "Rua Almirante Barroso, 400", lat: -27.5969, lng: -48.6339, preco: 1800, quartos: 2, banheiros: 1, areaM2: 55, aceitaPet: 1, mobiliado: 0, descricao: "Próximo ao terminal integrado, fácil acesso à BR-101." },
-    { titulo: "Casa 3 quartos em Kobrasol", municipio: "São José", bairro: "Kobrasol", endereco: "Rua João Pereira, 250", lat: -27.5936, lng: -48.6142, preco: 2600, quartos: 3, banheiros: 2, areaM2: 110, aceitaPet: 1, mobiliado: 0, descricao: "Bairro comercial, próximo a shoppings e escolas." },
-    { titulo: "Apto 2 quartos no Centro de Palhoça", municipio: "Palhoça", bairro: "Centro", endereco: "Av. Pedra Branca, 600", lat: -27.6386, lng: -48.6706, preco: 1500, quartos: 2, banheiros: 1, areaM2: 50, aceitaPet: 0, mobiliado: 0, descricao: "Próximo à Via Expressa, ótimo custo-benefício." },
-    { titulo: "Apto 1 quarto em Pedra Branca", municipio: "Palhoça", bairro: "Pedra Branca", endereco: "Av. Marieta D'Ávila, 1200", lat: -27.6289, lng: -48.6572, preco: 2000, quartos: 1, banheiros: 1, areaM2: 42, aceitaPet: 1, mobiliado: 1, descricao: "Bairro planejado, mobiliado, prédio com academia." },
-    { titulo: "Casa 3 quartos no Centro de Biguaçu", municipio: "Biguaçu", bairro: "Centro", endereco: "Rua Getúlio Vargas, 150", lat: -27.4941, lng: -48.655, preco: 1900, quartos: 3, banheiros: 1, areaM2: 100, aceitaPet: 1, mobiliado: 0, descricao: "Quintal amplo, próxima à BR-101 e ao centro histórico." },
-    { titulo: "Casa 2 quartos em Santo Amaro da Imperatriz", municipio: "Santo Amaro da Imperatriz", bairro: "Centro", endereco: "Rua Leoberto Leal, 80", lat: -27.6892, lng: -48.7789, preco: 1400, quartos: 2, banheiros: 1, areaM2: 70, aceitaPet: 1, mobiliado: 0, descricao: "Perto das Termas, cidade tranquila a 30 min de Floripa." },
-    { titulo: "Casa 2 quartos em Governador Celso Ramos", municipio: "Governador Celso Ramos", bairro: "Centro", endereco: "Rua Beira Mar, 220", lat: -27.3167, lng: -48.55, preco: 1600, quartos: 2, banheiros: 1, areaM2: 65, aceitaPet: 1, mobiliado: 0, descricao: "A poucos metros da praia, cidade de pescadores." },
-    { titulo: "Casa 3 quartos em Águas Mornas", municipio: "Águas Mornas", bairro: "Centro", endereco: "Rua Principal, 55", lat: -27.7275, lng: -48.8064, preco: 1300, quartos: 3, banheiros: 1, areaM2: 95, aceitaPet: 1, mobiliado: 0, descricao: "Área verde, ideal para quem busca sossego perto da capital." },
+    { titulo: "Apto 2 quartos próximo à UFSC", tipoOperacao: "aluguel", municipio: "Florianópolis", bairro: "Trindade", endereco: "Rua Lauro Linhares, 500", lat: -27.5847, lng: -48.5223, preco: 2400, quartos: 2, banheiros: 1, areaM2: 62, aceitaPet: 1, mobiliado: 0, descricao: "Apartamento reformado a 10 minutos a pé da UFSC, ótimo para estudantes." },
+    { titulo: "Kitnet mobiliada no Centro", tipoOperacao: "aluguel", municipio: "Florianópolis", bairro: "Centro", endereco: "Rua Felipe Schmidt, 200", lat: -27.5954, lng: -48.548, preco: 1600, quartos: 1, banheiros: 1, areaM2: 28, aceitaPet: 0, mobiliado: 1, descricao: "Kitnet mobiliada, pronta para morar, próxima ao terminal urbano." },
+    { titulo: "Casa 3 quartos na Lagoa da Conceição", tipoOperacao: "aluguel", municipio: "Florianópolis", bairro: "Lagoa da Conceição", endereco: "Servidão dos Pescadores, 45", lat: -27.6068, lng: -48.459, preco: 4800, quartos: 3, banheiros: 2, areaM2: 140, aceitaPet: 1, mobiliado: 0, descricao: "Casa térrea com quintal, a 5 minutos da Lagoa." },
+    { titulo: "Apto 1 quarto em Coqueiros", tipoOperacao: "aluguel", municipio: "Florianópolis", bairro: "Coqueiros", endereco: "Av. Governador Ivo Silveira, 800", lat: -27.589, lng: -48.572, preco: 1950, quartos: 1, banheiros: 1, areaM2: 45, aceitaPet: 0, mobiliado: 0, descricao: "Vista parcial para o mar, prédio com portaria 24h." },
+    { titulo: "Apto 2 quartos no Campeche", tipoOperacao: "aluguel", municipio: "Florianópolis", bairro: "Campeche", endereco: "Rua Pequeno Príncipe, 120", lat: -27.6767, lng: -48.489, preco: 2200, quartos: 2, banheiros: 1, areaM2: 58, aceitaPet: 1, mobiliado: 0, descricao: "A 8 quadras da praia do Campeche, condomínio com piscina." },
+    { titulo: "Casa 4 quartos em Canasvieiras", tipoOperacao: "temporada", municipio: "Florianópolis", bairro: "Canasvieiras", endereco: "Rua das Gaivotas, 300", lat: -27.431, lng: -48.466, preco: 3600, quartos: 4, banheiros: 3, areaM2: 180, aceitaPet: 1, mobiliado: 1, descricao: "Ideal para temporada em família, a 200m da praia. Diária ou semana." },
+    { titulo: "Apto 3 quartos nos Ingleses", tipoOperacao: "temporada", municipio: "Florianópolis", bairro: "Ingleses", endereco: "Rua das Bromélias, 90", lat: -27.433, lng: -48.395, preco: 2900, quartos: 3, banheiros: 2, areaM2: 90, aceitaPet: 0, mobiliado: 1, descricao: "Mobiliado para temporada, a 3 quadras da praia dos Ingleses." },
+    { titulo: "Apto 2 quartos no Centro de São José", tipoOperacao: "aluguel", municipio: "São José", bairro: "Centro", endereco: "Rua Almirante Barroso, 400", lat: -27.5969, lng: -48.6339, preco: 1800, quartos: 2, banheiros: 1, areaM2: 55, aceitaPet: 1, mobiliado: 0, descricao: "Próximo ao terminal integrado, fácil acesso à BR-101." },
+    { titulo: "Casa 3 quartos em Kobrasol", tipoOperacao: "venda", municipio: "São José", bairro: "Kobrasol", endereco: "Rua João Pereira, 250", lat: -27.5936, lng: -48.6142, preco: 690000, quartos: 3, banheiros: 2, areaM2: 110, aceitaPet: 1, mobiliado: 0, descricao: "Bairro comercial, próximo a shoppings e escolas. Escritura em dia." },
+    { titulo: "Apto 2 quartos no Centro de Palhoça", tipoOperacao: "aluguel", municipio: "Palhoça", bairro: "Centro", endereco: "Av. Pedra Branca, 600", lat: -27.6386, lng: -48.6706, preco: 1500, quartos: 2, banheiros: 1, areaM2: 50, aceitaPet: 0, mobiliado: 0, descricao: "Próximo à Via Expressa, ótimo custo-benefício." },
+    { titulo: "Apto 1 quarto em Pedra Branca", tipoOperacao: "venda", municipio: "Palhoça", bairro: "Pedra Branca", endereco: "Av. Marieta D'Ávila, 1200", lat: -27.6289, lng: -48.6572, preco: 420000, quartos: 1, banheiros: 1, areaM2: 42, aceitaPet: 1, mobiliado: 1, descricao: "Bairro planejado, mobiliado, prédio com academia. Pronto para morar." },
+    { titulo: "Casa 3 quartos no Centro de Biguaçu", tipoOperacao: "aluguel", municipio: "Biguaçu", bairro: "Centro", endereco: "Rua Getúlio Vargas, 150", lat: -27.4941, lng: -48.655, preco: 1900, quartos: 3, banheiros: 1, areaM2: 100, aceitaPet: 1, mobiliado: 0, descricao: "Quintal amplo, próxima à BR-101 e ao centro histórico." },
+    { titulo: "Casa 2 quartos em Santo Amaro da Imperatriz", tipoOperacao: "aluguel", municipio: "Santo Amaro da Imperatriz", bairro: "Centro", endereco: "Rua Leoberto Leal, 80", lat: -27.6892, lng: -48.7789, preco: 1400, quartos: 2, banheiros: 1, areaM2: 70, aceitaPet: 1, mobiliado: 0, descricao: "Perto das Termas, cidade tranquila a 30 min de Floripa." },
+    { titulo: "Casa 2 quartos em Governador Celso Ramos", tipoOperacao: "aluguel", municipio: "Governador Celso Ramos", bairro: "Centro", endereco: "Rua Beira Mar, 220", lat: -27.3167, lng: -48.55, preco: 1600, quartos: 2, banheiros: 1, areaM2: 65, aceitaPet: 1, mobiliado: 0, descricao: "A poucos metros da praia, cidade de pescadores." },
+    { titulo: "Casa 3 quartos em Águas Mornas", tipoOperacao: "aluguel", municipio: "Águas Mornas", bairro: "Centro", endereco: "Rua Principal, 55", lat: -27.7275, lng: -48.8064, preco: 1300, quartos: 3, banheiros: 1, areaM2: 95, aceitaPet: 1, mobiliado: 0, descricao: "Área verde, ideal para quem busca sossego perto da capital." },
+    { titulo: "Sala comercial no Centro de Florianópolis", tipoOperacao: "comercial", municipio: "Florianópolis", bairro: "Centro", endereco: "Rua Tenente Silveira, 300", lat: -27.596, lng: -48.5495, preco: 2800, quartos: 0, banheiros: 1, areaM2: 45, aceitaPet: 0, mobiliado: 0, descricao: "Sala comercial no coração do Centro, prédio com portaria e elevador." },
+    { titulo: "Loja em Kobrasol, São José", tipoOperacao: "comercial", municipio: "São José", bairro: "Kobrasol", endereco: "Av. Presidente Kennedy, 900", lat: -27.5931, lng: -48.6127, preco: 3500, quartos: 0, banheiros: 1, areaM2: 80, aceitaPet: 0, mobiliado: 0, descricao: "Loja de esquina, alto fluxo de pedestres, próxima a bancos e comércio." },
+    { titulo: "Galpão industrial em Biguaçu", tipoOperacao: "comercial", municipio: "Biguaçu", bairro: "Centro", endereco: "Rodovia BR-101, km 195", lat: -27.4955, lng: -48.6535, preco: 8500, quartos: 0, banheiros: 2, areaM2: 600, aceitaPet: 0, mobiliado: 0, descricao: "Galpão com acesso direto à BR-101, pé-direito alto, ideal para logística." },
+    { titulo: "Casa 4 quartos na Lagoa da Conceição", tipoOperacao: "venda", municipio: "Florianópolis", bairro: "Lagoa da Conceição", endereco: "Servidão dos Pescadores, 120", lat: -27.607, lng: -48.4605, preco: 1850000, quartos: 4, banheiros: 3, areaM2: 210, aceitaPet: 1, mobiliado: 0, descricao: "Casa alto padrão a 5 minutos da Lagoa, piscina e churrasqueira." },
   ];
 
   const insertMany = db.transaction((rows: typeof seed) => {
@@ -154,6 +158,7 @@ function seedIfEmpty() {
 }
 
 export function listarImoveis(filtros: {
+  tipoOperacao?: string;
   municipio?: string;
   precoMin?: number;
   precoMax?: number;
@@ -163,6 +168,10 @@ export function listarImoveis(filtros: {
   const condicoes: string[] = ["i.status != 'removido'"];
   const params: Record<string, unknown> = {};
 
+  if (filtros.tipoOperacao) {
+    condicoes.push("i.tipo_operacao = @tipoOperacao");
+    params.tipoOperacao = filtros.tipoOperacao;
+  }
   if (filtros.municipio) {
     condicoes.push("i.municipio = @municipio");
     params.municipio = filtros.municipio;

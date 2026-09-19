@@ -40,6 +40,13 @@ export interface FiltrosBusca {
   aceitaPet?: boolean;
 }
 
+export const TIPOS_OPERACAO: { valor: TipoOperacao; rotulo: string }[] = [
+  { valor: "aluguel", rotulo: "Aluguel residencial" },
+  { valor: "venda", rotulo: "Compra e venda" },
+  { valor: "comercial", rotulo: "Comercial" },
+  { valor: "temporada", rotulo: "Temporada" },
+];
+
 export const MUNICIPIOS_MVP = [
   "Florianópolis",
   "São José",

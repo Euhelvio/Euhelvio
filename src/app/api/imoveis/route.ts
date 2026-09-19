@@ -6,13 +6,14 @@ import { MUNICIPIOS_MVP } from "@/lib/types";
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
 
+  const tipoOperacao = params.get("tipoOperacao") ?? undefined;
   const municipio = params.get("municipio") ?? undefined;
   const precoMin = params.get("precoMin") ? Number(params.get("precoMin")) : undefined;
   const precoMax = params.get("precoMax") ? Number(params.get("precoMax")) : undefined;
   const quartos = params.get("quartos") ? Number(params.get("quartos")) : undefined;
   const aceitaPet = params.get("aceitaPet") === "1";
 
-  const imoveis = listarImoveis({ municipio, precoMin, precoMax, quartos, aceitaPet });
+  const imoveis = listarImoveis({ tipoOperacao, municipio, precoMin, precoMax, quartos, aceitaPet });
   return NextResponse.json({ imoveis });
 }
 

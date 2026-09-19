@@ -5,7 +5,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Link from "next/link";
 import type { Imovel } from "@/lib/types";
-import { formatarPreco } from "@/lib/format";
+import { formatarPrecoImovel } from "@/lib/format";
 
 const icon = L.icon({
   iconUrl: "/leaflet/marker-icon.png",
@@ -37,7 +37,7 @@ export default function MapView({ imoveis }: { imoveis: Imovel[] }) {
             <div className="space-y-1 text-sm">
               <p className="font-semibold">{imovel.titulo}</p>
               <p>
-                {formatarPreco(imovel.preco)} / mês · {imovel.bairro}
+                {formatarPrecoImovel(imovel.preco, imovel.tipoOperacao)} · {imovel.bairro}
               </p>
               <Link href={`/imoveis/${imovel.id}`} className="text-blue-600 underline">
                 Ver detalhes
