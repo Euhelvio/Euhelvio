@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "echo 'root deployment: no install step'",
-  "buildCommand": "echo 'root deployment: no build step'",
-  "outputDirectory": "."
+  "installCommand": "cd photo-catalog && npm ci",
+  "buildCommand": "cd photo-catalog && npm run build",
+  "outputDirectory": "photo-catalog/out"
 }
