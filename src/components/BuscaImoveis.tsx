@@ -89,11 +89,15 @@ export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imo
       <div className="relative overflow-hidden rounded-2xl border border-white/10">
         <HeroCarrossel />
 
-        <section className="relative z-10 flex flex-col gap-4 px-5 py-8 text-center text-white md:px-10">
-          <h1 className="text-2xl font-bold md:text-3xl">
-            Encontre seu imóvel na <span className="text-brand">Grande Florianópolis</span>
+        <section className="relative z-10 flex flex-col gap-4 px-5 py-10 text-center text-white md:px-10">
+          <p className="text-sm font-semibold tracking-wide text-amber-200 drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
+            Seu próximo capítulo começa aqui ☀️
+          </p>
+          <h1 className="text-2xl font-bold drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)] md:text-4xl">
+            Encontre seu imóvel na{" "}
+            <span className="text-amber-300">Grande Florianópolis</span>
           </h1>
-          <p className="text-sm text-zinc-200">
+          <p className="text-sm text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)] md:text-base">
             Aluguel, compra e venda, comercial e temporada — anúncios de várias imobiliárias
             reunidos num só lugar.
           </p>
@@ -114,7 +118,7 @@ export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imo
           </div>
         </section>
 
-        <div className="relative z-10 mx-4 mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-white/15 bg-black/35 p-4 text-white backdrop-blur-sm">
+        <div className="relative z-10 mx-4 mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-white/20 bg-black/20 p-4 text-white backdrop-blur-md">
           <label className="flex flex-col text-sm">
             Tipo de operação
             <select

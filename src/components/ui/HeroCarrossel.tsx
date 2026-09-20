@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
-const FOTOS = ["/hero/foto-1.webp", "/hero/foto-2.webp", "/hero/foto-3.webp", "/hero/foto-4.webp"];
+const FOTOS = ["/hero/foto-1.webp", "/hero/foto-3.webp", "/hero/foto-4.webp", "/hero/foto-2.webp"];
 const INTERVALO_MS = 6000;
 
 export default function HeroCarrossel() {
@@ -31,7 +31,8 @@ export default function HeroCarrossel() {
           }`}
         />
       ))}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/55 to-black/75" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/45" />
+      <div className="absolute inset-0 bg-gradient-to-t from-amber-900/15 via-transparent to-transparent" />
     </div>
   );
 }
