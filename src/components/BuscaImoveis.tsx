@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import ImovelCard from "./ImovelCard";
 import AlertaForm from "./AlertaForm";
 import GlowTile from "./ui/GlowTile";
+import HeroCarrossel from "./ui/HeroCarrossel";
 import { IconeChave, IconeEtiqueta, IconePredio, IconeGuardaSol } from "./ui/icones";
 import type { FiltrosBusca, Imovel, TipoOperacao } from "@/lib/types";
 import { MUNICIPIOS_MVP, TIPOS_OPERACAO } from "@/lib/types";
@@ -85,103 +86,121 @@ export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imo
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <section className="flex flex-col gap-4 rounded-2xl border border-border-subtle bg-gradient-to-br from-brand/10 via-surface to-surface px-5 py-8 text-center md:px-10">
-        <h1 className="text-2xl font-bold md:text-3xl">
-          Encontre seu imóvel na <span className="text-brand">Grande Florianópolis</span>
-        </h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Aluguel, compra e venda, comercial e temporada — anúncios de várias imobiliárias
-          reunidos num só lugar.
-        </p>
-        <div className="mx-auto flex w-full max-w-2xl flex-wrap gap-3 pt-2">
-          {TIPOS_OPERACAO.map((t) => {
-            const Icone = ICONE_TIPO[t.valor];
-            return (
-              <GlowTile
-                key={t.valor}
-                cor={t.cor}
-                ativo={tipoOperacao === t.valor}
-                icone={<Icone />}
-                rotulo={t.rotulo}
-                onClick={() => setTipoOperacao(tipoOperacao === t.valor ? "" : t.valor)}
-              />
-            );
-          })}
+      <div className="relative overflow-hidden rounded-2xl border border-white/10">
+        <HeroCarrossel />
+
+        <section className="relative z-10 flex flex-col gap-4 px-5 py-8 text-center text-white md:px-10">
+          <h1 className="text-2xl font-bold md:text-3xl">
+            Encontre seu imóvel na <span className="text-brand">Grande Florianópolis</span>
+          </h1>
+          <p className="text-sm text-zinc-200">
+            Aluguel, compra e venda, comercial e temporada — anúncios de várias imobiliárias
+            reunidos num só lugar.
+          </p>
+          <div className="mx-auto flex w-full max-w-2xl flex-wrap gap-3 pt-2">
+            {TIPOS_OPERACAO.map((t) => {
+              const Icone = ICONE_TIPO[t.valor];
+              return (
+                <GlowTile
+                  key={t.valor}
+                  cor={t.cor}
+                  ativo={tipoOperacao === t.valor}
+                  icone={<Icone />}
+                  rotulo={t.rotulo}
+                  onClick={() => setTipoOperacao(tipoOperacao === t.valor ? "" : t.valor)}
+                />
+              );
+            })}
+          </div>
+        </section>
+
+        <div className="relative z-10 mx-4 mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-white/15 bg-black/35 p-4 text-white backdrop-blur-sm">
+          <label className="flex flex-col text-sm">
+            Tipo de operação
+            <select
+              className="mt-1 rounded border border-white/25 bg-black/20 px-2 py-1 text-white"
+              value={tipoOperacao}
+              onChange={(e) => setTipoOperacao(e.target.value)}
+            >
+              <option value="" className="text-black">
+                Todos
+              </option>
+              {TIPOS_OPERACAO.map((t) => (
+                <option key={t.valor} value={t.valor} className="text-black">
+                  {t.rotulo}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex flex-col text-sm">
+            Município
+            <select
+              className="mt-1 rounded border border-white/25 bg-black/20 px-2 py-1 text-white"
+              value={municipio}
+              onChange={(e) => setMunicipio(e.target.value)}
+            >
+              <option value="" className="text-black">
+                Todos
+              </option>
+              {MUNICIPIOS_MVP.map((m) => (
+                <option key={m} value={m} className="text-black">
+                  {m}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex flex-col text-sm">
+            Preço máximo (R$)
+            <input
+              type="number"
+              min={0}
+              className="mt-1 w-36 rounded border border-white/25 bg-black/20 px-2 py-1 text-white placeholder:text-zinc-300"
+              value={precoMax}
+              onChange={(e) => setPrecoMax(e.target.value)}
+              placeholder="Sem limite"
+            />
+          </label>
+
+          <label className="flex flex-col text-sm">
+            Mínimo de quartos
+            <select
+              className="mt-1 rounded border border-white/25 bg-black/20 px-2 py-1 text-white"
+              value={quartos}
+              onChange={(e) => setQuartos(e.target.value)}
+            >
+              <option value="" className="text-black">
+                Qualquer
+              </option>
+              <option value="1" className="text-black">
+                1+
+              </option>
+              <option value="2" className="text-black">
+                2+
+              </option>
+              <option value="3" className="text-black">
+                3+
+              </option>
+              <option value="4" className="text-black">
+                4+
+              </option>
+            </select>
+          </label>
+
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={aceitaPet}
+              onChange={(e) => setAceitaPet(e.target.checked)}
+            />
+            Aceita pet
+          </label>
+
+          <p className="ml-auto text-sm text-zinc-200">
+            {carregando ? "Buscando…" : `${imoveis.length} imóvel(is) encontrado(s)`}
+          </p>
         </div>
-      </section>
-
-      <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-border-subtle bg-surface p-4">
-        <label className="flex flex-col text-sm">
-          Tipo de operação
-          <select
-            className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
-            value={tipoOperacao}
-            onChange={(e) => setTipoOperacao(e.target.value)}
-          >
-            <option value="">Todos</option>
-            {TIPOS_OPERACAO.map((t) => (
-              <option key={t.valor} value={t.valor}>
-                {t.rotulo}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col text-sm">
-          Município
-          <select
-            className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
-            value={municipio}
-            onChange={(e) => setMunicipio(e.target.value)}
-          >
-            <option value="">Todos</option>
-            {MUNICIPIOS_MVP.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col text-sm">
-          Preço máximo (R$)
-          <input
-            type="number"
-            min={0}
-            className="mt-1 w-36 rounded border border-border-subtle bg-transparent px-2 py-1"
-            value={precoMax}
-            onChange={(e) => setPrecoMax(e.target.value)}
-            placeholder="Sem limite"
-          />
-        </label>
-
-        <label className="flex flex-col text-sm">
-          Mínimo de quartos
-          <select
-            className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
-            value={quartos}
-            onChange={(e) => setQuartos(e.target.value)}
-          >
-            <option value="">Qualquer</option>
-            <option value="1">1+</option>
-            <option value="2">2+</option>
-            <option value="3">3+</option>
-            <option value="4">4+</option>
-          </select>
-        </label>
-
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={aceitaPet}
-            onChange={(e) => setAceitaPet(e.target.checked)}
-          />
-          Aceita pet
-        </label>
-
-        <p className="ml-auto text-sm text-zinc-500">
-          {carregando ? "Buscando…" : `${imoveis.length} imóvel(is) encontrado(s)`}
-        </p>
       </div>
 
       <AlertaForm filtros={filtrosAtuais} />
