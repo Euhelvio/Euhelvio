@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
-const FOTOS = ["/hero/foto-1.webp", "/hero/foto-3.webp", "/hero/foto-4.webp", "/hero/foto-2.webp"];
+const FOTOS = [
+  "/hero/foto-1.webp",
+  "/hero/foto-3.webp",
+  "/hero/foto-5.webp",
+  "/hero/foto-4.webp",
+  "/hero/foto-2.webp",
+];
 const INTERVALO_MS = 6000;
 
 export default function HeroCarrossel() {
