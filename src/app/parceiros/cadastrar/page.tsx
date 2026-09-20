@@ -1,10 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { MUNICIPIOS_MVP, TIPOS_OPERACAO } from "@/lib/types";
 import type { TipoOperacao } from "@/lib/types";
 import GlowButton from "@/components/ui/GlowButton";
+
+const MapaSelecionarLocal = dynamic(() => import("@/components/MapaSelecionarLocal"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center rounded-lg bg-surface text-sm text-zinc-500 dark:text-zinc-400">
+      Carregando mapa…
+    </div>
+  ),
+});
 
 const estadoInicial = {
   titulo: "",
@@ -140,6 +150,24 @@ export default function CadastrarImovel() {
             </label>
           </div>
 
+          <div className="flex flex-col gap-2">
+            <p className="text-sm">Localização no mapa</p>
+            <div className="h-64 w-full overflow-hidden rounded-lg border border-border-subtle">
+              <MapaSelecionarLocal
+                lat={form.lat ? Number(form.lat) : null}
+                lng={form.lng ? Number(form.lng) : null}
+                onSelecionar={(lat, lng) => {
+                  atualizar("lat", lat.toFixed(6));
+                  atualizar("lng", lng.toFixed(6));
+                }}
+              />
+            </div>
+            <p className="text-xs text-zinc-500">
+              Clique no mapa (ou arraste o marcador) para marcar onde fica o imóvel — as
+              coordenadas abaixo preenchem sozinhas.
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <label className="flex flex-col text-sm">
               Latitude
@@ -166,9 +194,6 @@ export default function CadastrarImovel() {
               />
             </label>
           </div>
-          <p className="-mt-2 text-xs text-zinc-500">
-            Dica: clique com o botão direito no local no Google Maps para copiar as coordenadas.
-          </p>
 
           <div className="grid grid-cols-2 gap-3">
             <label className="flex flex-col text-sm">
