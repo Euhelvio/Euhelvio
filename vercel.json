@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "echo 'root deployment: no install step'",
+  "buildCommand": "echo 'root deployment: no build step'",
+  "outputDirectory": "."
+}
