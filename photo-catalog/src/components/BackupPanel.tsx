@@ -80,9 +80,7 @@ export default function BackupPanel({ photoCount }: { photoCount: number }) {
       {isRunning && progress && (
         <p className="text-xs opacity-60">
           {progress.phase === "reading" ? "Processando" : "Compactando"}
-          {progress.phase === "reading"
-            ? ` ${progress.processed}/${progress.total}…`
-            : ` ${progress.processed}%…`}
+          {` ${progress.processed}/${progress.total}…`}
         </p>
       )}
 
