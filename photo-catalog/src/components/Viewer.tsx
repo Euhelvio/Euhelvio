@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { db } from "@/lib/db";
+import { downloadBlob } from "@/lib/download";
 import { renderFilteredBlob } from "@/lib/filters";
 import { createThumbnail } from "@/lib/thumbnail";
 import { useBlobImage } from "@/lib/useObjectUrl";
@@ -137,12 +138,7 @@ export default function Viewer({
       if (navigator.canShare?.({ files: [file] }) && navigator.share) {
         await navigator.share({ files: [file], title: photo.fileName });
       } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = file.name;
-        a.click();
-        URL.revokeObjectURL(url);
+        downloadBlob(blob, file.name);
         setMessage("Compartilhamento direto não suportado; baixamos o arquivo.");
       }
     } catch (err) {

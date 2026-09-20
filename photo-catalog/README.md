@@ -31,6 +31,11 @@ aprovação de app pelo Google.
    monocromático, brilho, contraste e saturação, com botões para salvar uma
    cópia no catálogo ou compartilhar via a API nativa de compartilhamento do
    navegador (com fallback para download).
+7. No painel "Backup do catálogo", use "Exportar backup" para baixar um
+   `.zip` com todas as fotos e metadados — guarde esse arquivo em outro
+   lugar, já que o catálogo só existe neste navegador (veja abaixo). Use
+   "Restaurar backup" para trazer esse `.zip` de volta, neste navegador ou
+   em outro/em outro dispositivo.
 
 ## Stack
 
@@ -58,4 +63,6 @@ aprovação de app pelo Google.
   roda inteiramente no navegador; para catálogos assim, prefira importar os
   arquivos `.zip` do Takeout um de cada vez.
 - Os dados vivem no IndexedDB do navegador/dispositivo em uso — não há
-  sincronização entre dispositivos nem backup automático nesta versão.
+  sincronização automática entre dispositivos. Use o painel de backup
+  (exportar/restaurar) para levar o catálogo para outro navegador/aparelho
+  ou se precaver antes de limpar os dados do site.
