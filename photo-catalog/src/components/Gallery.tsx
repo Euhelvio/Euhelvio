@@ -16,7 +16,7 @@ export default function Gallery({
 }) {
   if (items.length === 0) {
     return (
-      <p className="text-sm opacity-60 py-12 text-center">
+      <p className="text-sm opacity-70 py-12 text-center rounded-lg border border-black/10 dark:border-white/15 bg-white/85 dark:bg-black/55 backdrop-blur-sm shadow-sm">
         {emptyMessage ?? "Nenhuma foto para exibir."}
       </p>
     );
