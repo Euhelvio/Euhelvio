@@ -1,4 +1,4 @@
-import JSZip from "jszip";
+import { BlobReader, TextWriter, ZipReader, type FileEntry } from "@zip.js/zip.js";
 import { db } from "./db";
 import { createThumbnail } from "./thumbnail";
 import type { PhotoRecord } from "./types";
@@ -63,45 +63,45 @@ function sidecarBaseName(jsonName: string): string {
 
 /** Matches each media entry to its Google Takeout metadata sidecar, if any. */
 function buildSidecarMap(
-  mediaEntries: JSZip.JSZipObject[],
-  jsonEntries: JSZip.JSZipObject[]
-): Map<string, JSZip.JSZipObject> {
-  const jsonByDir = new Map<string, JSZip.JSZipObject[]>();
+  mediaEntries: FileEntry[],
+  jsonEntries: FileEntry[]
+): Map<string, FileEntry> {
+  const jsonByDir = new Map<string, FileEntry[]>();
   for (const entry of jsonEntries) {
-    const dir = dirOf(entry.name);
+    const dir = dirOf(entry.filename);
     const list = jsonByDir.get(dir) ?? [];
     list.push(entry);
     jsonByDir.set(dir, list);
   }
 
-  const exactByPath = new Map<string, JSZip.JSZipObject>();
+  const exactByPath = new Map<string, FileEntry>();
   for (const entry of jsonEntries) {
-    const dir = dirOf(entry.name);
-    const base = sidecarBaseName(baseNameOf(entry.name));
+    const dir = dirOf(entry.filename);
+    const base = sidecarBaseName(baseNameOf(entry.filename));
     exactByPath.set(`${dir}/${base}`, entry);
   }
 
   const claimed = new Set<string>();
-  const result = new Map<string, JSZip.JSZipObject>();
+  const result = new Map<string, FileEntry>();
 
   for (const media of mediaEntries) {
-    const dir = dirOf(media.name);
-    const mediaBase = baseNameOf(media.name);
+    const dir = dirOf(media.filename);
+    const mediaBase = baseNameOf(media.filename);
     const exact = exactByPath.get(`${dir}/${mediaBase}`);
-    if (exact && !claimed.has(exact.name)) {
-      result.set(media.name, exact);
-      claimed.add(exact.name);
+    if (exact && !claimed.has(exact.filename)) {
+      result.set(media.filename, exact);
+      claimed.add(exact.filename);
       continue;
     }
 
     // Fallback: Takeout truncates very long filenames in the sidecar name.
     const candidates = (jsonByDir.get(dir) ?? []).filter(
-      (j) => !claimed.has(j.name)
+      (j) => !claimed.has(j.filename)
     );
-    let best: JSZip.JSZipObject | undefined;
+    let best: FileEntry | undefined;
     let bestScore = 0;
     for (const candidate of candidates) {
-      const candidateBase = sidecarBaseName(baseNameOf(candidate.name));
+      const candidateBase = sidecarBaseName(baseNameOf(candidate.filename));
       let common = 0;
       const max = Math.min(candidateBase.length, mediaBase.length);
       while (common < max && candidateBase[common] === mediaBase[common]) {
@@ -113,17 +113,17 @@ function buildSidecarMap(
       }
     }
     if (best) {
-      result.set(media.name, best);
-      claimed.add(best.name);
+      result.set(media.filename, best);
+      claimed.add(best.filename);
     }
   }
 
   return result;
 }
 
-async function parseSidecar(entry: JSZip.JSZipObject): Promise<ParsedSidecar> {
+async function parseSidecar(entry: FileEntry): Promise<ParsedSidecar> {
   try {
-    const text = await entry.async("text");
+    const text = await entry.getData(new TextWriter());
     const json = JSON.parse(text);
     const result: ParsedSidecar = {};
 
@@ -158,10 +158,15 @@ export async function importTakeoutZip(
   file: File | Blob,
   onProgress?: (p: ImportProgress) => void
 ): Promise<ImportProgress> {
-  const zip = await JSZip.loadAsync(file);
-  const entries = Object.values(zip.files).filter((e) => !e.dir);
-  const mediaEntries = entries.filter((e) => isImageFile(e.name));
-  const jsonEntries = entries.filter((e) => isJsonFile(e.name));
+  // Reads the zip's central directory and each entry's bytes via Blob.slice()
+  // ranges instead of loading the whole archive into memory — JSZip's
+  // whole-file read makes Chrome throw a NotReadableError on multi-GB
+  // Takeout exports (a real, fairly common size for a photo library).
+  const zipReader = new ZipReader(new BlobReader(file));
+  const allEntries = await zipReader.getEntries();
+  const entries = allEntries.filter((e): e is FileEntry => !e.directory);
+  const mediaEntries = entries.filter((e) => isImageFile(e.filename));
+  const jsonEntries = entries.filter((e) => isJsonFile(e.filename));
   const sidecarMap = buildSidecarMap(mediaEntries, jsonEntries);
 
   const progress: ImportProgress = {
@@ -175,11 +180,11 @@ export async function importTakeoutZip(
   let batch: PhotoRecord[] = [];
 
   for (const entry of mediaEntries) {
-    progress.currentFile = baseNameOf(entry.name);
+    progress.currentFile = baseNameOf(entry.filename);
 
-    const ext = extOf(entry.name);
+    const ext = extOf(entry.filename);
     const mime = IMAGE_MIME_BY_EXT[ext] ?? "application/octet-stream";
-    const arrayBuffer = await entry.async("arraybuffer");
+    const arrayBuffer = await entry.arrayBuffer();
     const blob = new Blob([arrayBuffer], { type: mime });
 
     const decoded = await createThumbnail(blob);
@@ -190,12 +195,12 @@ export async function importTakeoutZip(
       continue;
     }
 
-    const sidecar = sidecarMap.get(entry.name);
+    const sidecar = sidecarMap.get(entry.filename);
     const meta = sidecar ? await parseSidecar(sidecar) : {};
 
     const record: PhotoRecord = {
-      id: entry.name,
-      fileName: baseNameOf(entry.name),
+      id: entry.filename,
+      fileName: baseNameOf(entry.filename),
       mimeType: mime,
       blob,
       thumbBlob: decoded.thumbBlob,
@@ -205,7 +210,7 @@ export async function importTakeoutZip(
       lat: meta.lat,
       lng: meta.lng,
       category: "nao_classificado",
-      albumName: albumNameFromPath(entry.name),
+      albumName: albumNameFromPath(entry.filename),
       importedAt: Date.now(),
     };
 
@@ -226,6 +231,8 @@ export async function importTakeoutZip(
   if (batch.length > 0) {
     await db.photos.bulkPut(batch);
   }
+
+  await zipReader.close();
 
   progress.currentFile = undefined;
   progress.done = true;

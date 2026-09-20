@@ -9,10 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@zip.js/zip.js": "^2.16.0",
     "date-fns": "^4.4.0",
     "dexie": "^4.4.6",
     "dexie-react-hooks": "^4.4.0",
-    "jszip": "^3.10.2",
     "next": "16.3.5",
     "react": "19.2.8",
     "react-dom": "19.2.8"

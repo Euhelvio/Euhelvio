@@ -1,4 +1,12 @@
-import JSZip from "jszip";
+import {
+  BlobReader,
+  BlobWriter,
+  TextReader,
+  TextWriter,
+  ZipReader,
+  ZipWriter,
+  type FileEntry,
+} from "@zip.js/zip.js";
 import { db } from "./db";
 import { createThumbnail } from "./thumbnail";
 import type { PhotoListItem, PhotoRecord } from "./types";
@@ -27,13 +35,17 @@ export async function exportBackup(
   onProgress?: (p: BackupProgress) => void
 ): Promise<Blob> {
   const photos = await db.photos.toArray();
-  const zip = new JSZip();
+  // Streams each photo's bytes straight into the zip (via Blob.slice()
+  // ranges) instead of holding the whole archive in memory at once — the
+  // same class of large-file issue that breaks importing a multi-GB
+  // Takeout export can otherwise hit a large exported backup too.
+  const zipWriter = new ZipWriter(new BlobWriter("application/zip"));
   const manifest: BackupManifestEntry[] = [];
 
   for (let i = 0; i < photos.length; i++) {
     const photo = photos[i];
     const filePath = `${BLOBS_DIR}/${photo.id}`;
-    zip.file(filePath, photo.blob);
+    await zipWriter.add(filePath, new BlobReader(photo.blob));
     manifest.push({
       id: photo.id,
       fileName: photo.fileName,
@@ -49,7 +61,8 @@ export async function exportBackup(
       importedAt: photo.importedAt,
       file: filePath,
     });
-    onProgress?.({ total: photos.length, processed: i + 1, phase: "reading" });
+    onProgress?.({ total: photos.length, processed: i + 1, phase: "writing" });
+    await new Promise((resolve) => setTimeout(resolve, 0));
   }
 
   const manifestPayload: BackupManifest = {
@@ -57,15 +70,9 @@ export async function exportBackup(
     exportedAt: Date.now(),
     photos: manifest,
   };
-  zip.file(MANIFEST_NAME, JSON.stringify(manifestPayload));
+  await zipWriter.add(MANIFEST_NAME, new TextReader(JSON.stringify(manifestPayload)));
 
-  return zip.generateAsync({ type: "blob", compression: "DEFLATE" }, (metadata) => {
-    onProgress?.({
-      total: 100,
-      processed: Math.round(metadata.percent),
-      phase: "writing",
-    });
-  });
+  return zipWriter.close();
 }
 
 export interface RestoreResult {
@@ -77,13 +84,23 @@ export async function importBackup(
   file: File | Blob,
   onProgress?: (p: BackupProgress) => void
 ): Promise<RestoreResult> {
-  const zip = await JSZip.loadAsync(file);
-  const manifestEntry = zip.file(MANIFEST_NAME);
+  const zipReader = new ZipReader(new BlobReader(file));
+  const allEntries = await zipReader.getEntries();
+  const entryByPath = new Map(
+    allEntries
+      .filter((e): e is FileEntry => !e.directory)
+      .map((e) => [e.filename, e] as const)
+  );
+
+  const manifestEntry = entryByPath.get(MANIFEST_NAME);
   if (!manifestEntry) {
+    await zipReader.close();
     throw new Error("Arquivo de backup inválido: manifest.json não encontrado.");
   }
 
-  const manifest: BackupManifest = JSON.parse(await manifestEntry.async("text"));
+  const manifest: BackupManifest = JSON.parse(
+    await manifestEntry.getData(new TextWriter())
+  );
   const entries = manifest.photos ?? [];
 
   let imported = 0;
@@ -92,13 +109,14 @@ export async function importBackup(
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
-    const fileEntry = zip.file(entry.file);
+    const fileEntry = entryByPath.get(entry.file);
     if (!fileEntry) {
       skipped++;
+      onProgress?.({ total: entries.length, processed: i + 1, phase: "reading" });
       continue;
     }
 
-    const arrayBuffer = await fileEntry.async("arraybuffer");
+    const arrayBuffer = await fileEntry.arrayBuffer();
     const blob = new Blob([arrayBuffer], { type: entry.mimeType });
     const thumb = await createThumbnail(blob);
     if (!thumb) {
@@ -137,6 +155,8 @@ export async function importBackup(
   if (batch.length > 0) {
     await db.photos.bulkPut(batch);
   }
+
+  await zipReader.close();
 
   return { imported, skipped };
 }
