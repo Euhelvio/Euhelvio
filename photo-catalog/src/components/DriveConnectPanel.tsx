@@ -24,7 +24,7 @@ export default function DriveConnectPanel({
   onDisconnect,
 }: DriveConnectPanelProps) {
   return (
-    <div className="rounded-lg border border-black/10 dark:border-white/15 p-4 flex flex-col gap-3">
+    <div className="rounded-lg border border-black/10 dark:border-white/15 bg-white/85 dark:bg-black/55 backdrop-blur-sm shadow-sm p-4 flex flex-col gap-3">
       <div>
         <h2 className="font-medium">Google Drive</h2>
         <p className="text-sm opacity-70">

@@ -98,16 +98,23 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black text-black dark:text-white">
+    <div className="relative min-h-screen text-black dark:text-white">
+      <div
+        className="fixed inset-0 -z-10 bg-cover bg-center"
+        style={{ backgroundImage: "url(/hero-guimaraes.jpg)" }}
+        aria-hidden
+      />
+      <div className="fixed inset-0 -z-10 bg-white/55 dark:bg-black/70" aria-hidden />
+
       <main className="mx-auto max-w-6xl px-4 py-8 flex flex-col gap-6">
         <header>
-          <h1 className="text-2xl font-semibold">Catálogo de Fotos</h1>
-          <p className="text-sm opacity-70">
+          <h1 className="text-3xl font-semibold drop-shadow-sm">Catálogo de Fotos</h1>
+          <p className="text-sm opacity-80">
             Importe do Google Takeout, ou navegue direto de uma pasta do Google Drive.
           </p>
         </header>
 
-        <div className="flex gap-1 border-b border-black/10 dark:border-white/15">
+        <div className="flex gap-1 rounded-full bg-black/5 dark:bg-white/10 backdrop-blur-sm p-1 w-fit">
           <ModeTab active={mode === "local"} onClick={() => setMode("local")}>
             Importado localmente
           </ModeTab>
@@ -146,7 +153,7 @@ export default function Home() {
         />
 
         {geoProgress && (
-          <p className="text-xs opacity-60">
+          <p className="text-xs opacity-80 px-3 py-2 rounded-md w-fit bg-white/85 dark:bg-black/55 backdrop-blur-sm shadow-sm">
             Resolvendo locais: {geoProgress.processed}/{geoProgress.total}
             {geoProgress.currentLabel ? ` — ${geoProgress.currentLabel}` : ""}
           </p>
@@ -189,10 +196,10 @@ function ModeTab({
   return (
     <button
       onClick={onClick}
-      className={`text-sm px-3 py-2 border-b-2 -mb-px ${
+      className={`text-sm px-4 py-1.5 rounded-full transition-colors ${
         active
-          ? "border-blue-600 font-medium"
-          : "border-transparent opacity-60 hover:opacity-100"
+          ? "bg-white dark:bg-zinc-800 shadow-sm font-medium"
+          : "opacity-70 hover:opacity-100"
       }`}
     >
       {children}
