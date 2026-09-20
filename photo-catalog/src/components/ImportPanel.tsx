@@ -26,9 +26,11 @@ export default function ImportPanel() {
       setSummary(
         `Importação concluída: ${totalImported} fotos adicionadas, ${totalSkipped} ignoradas.`
       );
-    } catch {
+    } catch (err) {
+      console.error("Falha ao importar Takeout:", err);
+      const detail = err instanceof Error ? err.message : String(err);
       setError(
-        "Não foi possível ler o arquivo. Confirme que é um .zip exportado pelo Google Takeout."
+        `Não foi possível ler o arquivo (${detail}). Confirme que é um .zip exportado pelo Google Takeout.`
       );
     } finally {
       if (inputRef.current) inputRef.current.value = "";
