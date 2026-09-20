@@ -153,7 +153,7 @@ export default function Home() {
         />
 
         {geoProgress && (
-          <p className="text-xs opacity-80 px-3 py-2 rounded-md w-fit bg-white/85 dark:bg-black/55 backdrop-blur-sm shadow-sm">
+          <p className="glass-card text-xs opacity-80 px-3 py-2 w-fit">
             Resolvendo locais: {geoProgress.processed}/{geoProgress.total}
             {geoProgress.currentLabel ? ` — ${geoProgress.currentLabel}` : ""}
           </p>

@@ -36,7 +36,7 @@ export default function FilterBar({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-black/10 dark:border-white/15 bg-white/85 dark:bg-black/55 backdrop-blur-sm shadow-sm p-4">
+    <div className="glass-card flex flex-col gap-3 p-4">
       <div className="flex flex-wrap items-end gap-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs opacity-70">De</label>
