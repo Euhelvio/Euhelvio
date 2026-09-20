@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MUNICIPIOS_MVP, TIPOS_OPERACAO } from "@/lib/types";
 import type { TipoOperacao } from "@/lib/types";
+import GlowButton from "@/components/ui/GlowButton";
 
 const estadoInicial = {
   titulo: "",
@@ -74,14 +75,14 @@ export default function CadastrarImovel() {
       </div>
 
       <form onSubmit={enviar} className="flex flex-col gap-3">
-        <fieldset className="flex flex-col gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+        <fieldset className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface p-4">
           <legend className="px-1 text-sm font-semibold">Dados do imóvel</legend>
 
           <label className="flex flex-col text-sm">
             Título do anúncio
             <input
               required
-              className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+              className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
               value={form.titulo}
               onChange={(e) => atualizar("titulo", e.target.value)}
             />
@@ -91,7 +92,7 @@ export default function CadastrarImovel() {
             <label className="flex flex-col text-sm">
               Tipo de operação
               <select
-                className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+                className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
                 value={form.tipoOperacao}
                 onChange={(e) => atualizar("tipoOperacao", e.target.value as TipoOperacao)}
               >
@@ -105,7 +106,7 @@ export default function CadastrarImovel() {
             <label className="flex flex-col text-sm">
               Município
               <select
-                className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+                className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
                 value={form.municipio}
                 onChange={(e) => atualizar("municipio", e.target.value)}
               >
@@ -123,7 +124,7 @@ export default function CadastrarImovel() {
               Bairro
               <input
                 required
-                className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+                className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
                 value={form.bairro}
                 onChange={(e) => atualizar("bairro", e.target.value)}
               />
@@ -132,7 +133,7 @@ export default function CadastrarImovel() {
               Endereço
               <input
                 required
-                className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+                className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
                 value={form.endereco}
                 onChange={(e) => atualizar("endereco", e.target.value)}
               />
@@ -147,7 +148,7 @@ export default function CadastrarImovel() {
                 type="number"
                 step="any"
                 placeholder="ex: -27.5954"
-                className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+                className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
                 value={form.lat}
                 onChange={(e) => atualizar("lat", e.target.value)}
               />
@@ -159,7 +160,7 @@ export default function CadastrarImovel() {
                 type="number"
                 step="any"
                 placeholder="ex: -48.5480"
-                className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+                className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
                 value={form.lng}
                 onChange={(e) => atualizar("lng", e.target.value)}
               />
@@ -176,7 +177,7 @@ export default function CadastrarImovel() {
                 required
                 type="number"
                 min={0}
-                className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+                className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
                 value={form.preco}
                 onChange={(e) => atualizar("preco", e.target.value)}
               />
@@ -187,7 +188,7 @@ export default function CadastrarImovel() {
                 required
                 type="number"
                 min={0}
-                className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+                className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
                 value={form.areaM2}
                 onChange={(e) => atualizar("areaM2", e.target.value)}
               />
@@ -201,7 +202,7 @@ export default function CadastrarImovel() {
                 required
                 type="number"
                 min={0}
-                className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+                className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
                 value={form.quartos}
                 onChange={(e) => atualizar("quartos", e.target.value)}
               />
@@ -212,7 +213,7 @@ export default function CadastrarImovel() {
                 required
                 type="number"
                 min={0}
-                className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+                className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
                 value={form.banheiros}
                 onChange={(e) => atualizar("banheiros", e.target.value)}
               />
@@ -242,20 +243,20 @@ export default function CadastrarImovel() {
             Descrição
             <textarea
               rows={3}
-              className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+              className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
               value={form.descricao}
               onChange={(e) => atualizar("descricao", e.target.value)}
             />
           </label>
         </fieldset>
 
-        <fieldset className="flex flex-col gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+        <fieldset className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface p-4">
           <legend className="px-1 text-sm font-semibold">Dados do anunciante</legend>
           <label className="flex flex-col text-sm">
             Nome da imobiliária/corretor
             <input
               required
-              className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+              className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
               value={form.fonteNome}
               onChange={(e) => atualizar("fonteNome", e.target.value)}
             />
@@ -264,20 +265,16 @@ export default function CadastrarImovel() {
             Contato (telefone/WhatsApp)
             <input
               required
-              className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+              className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
               value={form.fonteContato}
               onChange={(e) => atualizar("fonteContato", e.target.value)}
             />
           </label>
         </fieldset>
 
-        <button
-          type="submit"
-          disabled={status === "enviando"}
-          className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-white dark:text-zinc-900"
-        >
+        <GlowButton type="submit" disabled={status === "enviando"} className="w-full">
           {status === "enviando" ? "Publicando…" : "Publicar imóvel"}
-        </button>
+        </GlowButton>
         {erro && <p className="text-sm text-red-600">{erro}</p>}
       </form>
     </div>

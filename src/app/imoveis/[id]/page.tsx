@@ -27,10 +27,21 @@ export default async function ImovelDetalhe({
       />
 
       <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-          {TIPOS_OPERACAO.find((t) => t.valor === imovel.tipoOperacao)?.rotulo}
-        </p>
-        <h1 className="text-2xl font-bold">{imovel.titulo}</h1>
+        {(() => {
+          const tipo = TIPOS_OPERACAO.find((t) => t.valor === imovel.tipoOperacao);
+          return (
+            <span
+              className="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
+              style={{
+                color: tipo?.cor,
+                backgroundColor: tipo ? `color-mix(in srgb, ${tipo.cor} 16%, transparent)` : undefined,
+              }}
+            >
+              {tipo?.rotulo}
+            </span>
+          );
+        })()}
+        <h1 className="mt-2 text-2xl font-bold">{imovel.titulo}</h1>
         <p className="text-zinc-600 dark:text-zinc-400">
           {imovel.endereco}, {imovel.bairro} — {imovel.municipio}
         </p>

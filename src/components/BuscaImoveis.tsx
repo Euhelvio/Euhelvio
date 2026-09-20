@@ -1,23 +1,33 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { ComponentType, CSSProperties, SVGProps } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import ImovelCard from "./ImovelCard";
 import AlertaForm from "./AlertaForm";
-import type { FiltrosBusca, Imovel } from "@/lib/types";
+import GlowTile from "./ui/GlowTile";
+import { IconeChave, IconeEtiqueta, IconePredio, IconeGuardaSol } from "./ui/icones";
+import type { FiltrosBusca, Imovel, TipoOperacao } from "@/lib/types";
 import { MUNICIPIOS_MVP, TIPOS_OPERACAO } from "@/lib/types";
 
 const MapView = dynamic(() => import("./MapView"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center rounded-lg bg-zinc-100 text-sm text-zinc-500 dark:bg-zinc-900">
+    <div className="flex h-full w-full items-center justify-center rounded-lg bg-surface text-sm text-zinc-500 dark:text-zinc-400">
       Carregando mapa…
     </div>
   ),
 });
 
 const MAX_COMPARACAO = 4;
+
+const ICONE_TIPO: Record<TipoOperacao, ComponentType<SVGProps<SVGSVGElement>>> = {
+  aluguel: IconeChave,
+  venda: IconeEtiqueta,
+  comercial: IconePredio,
+  temporada: IconeGuardaSol,
+};
 
 export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imovel[] }) {
   const [imoveis, setImoveis] = useState(imoveisIniciais);
@@ -74,12 +84,37 @@ export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imo
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+    <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+      <section className="flex flex-col gap-4 rounded-2xl border border-border-subtle bg-gradient-to-br from-brand/10 via-surface to-surface px-5 py-8 text-center md:px-10">
+        <h1 className="text-2xl font-bold md:text-3xl">
+          Encontre seu imóvel na <span className="text-brand">Grande Florianópolis</span>
+        </h1>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          Aluguel, compra e venda, comercial e temporada — anúncios de várias imobiliárias
+          reunidos num só lugar.
+        </p>
+        <div className="mx-auto flex w-full max-w-2xl flex-wrap gap-3 pt-2">
+          {TIPOS_OPERACAO.map((t) => {
+            const Icone = ICONE_TIPO[t.valor];
+            return (
+              <GlowTile
+                key={t.valor}
+                cor={t.cor}
+                ativo={tipoOperacao === t.valor}
+                icone={<Icone />}
+                rotulo={t.rotulo}
+                onClick={() => setTipoOperacao(tipoOperacao === t.valor ? "" : t.valor)}
+              />
+            );
+          })}
+        </div>
+      </section>
+
+      <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-border-subtle bg-surface p-4">
         <label className="flex flex-col text-sm">
           Tipo de operação
           <select
-            className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+            className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
             value={tipoOperacao}
             onChange={(e) => setTipoOperacao(e.target.value)}
           >
@@ -95,7 +130,7 @@ export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imo
         <label className="flex flex-col text-sm">
           Município
           <select
-            className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+            className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
             value={municipio}
             onChange={(e) => setMunicipio(e.target.value)}
           >
@@ -113,7 +148,7 @@ export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imo
           <input
             type="number"
             min={0}
-            className="mt-1 w-36 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+            className="mt-1 w-36 rounded border border-border-subtle bg-transparent px-2 py-1"
             value={precoMax}
             onChange={(e) => setPrecoMax(e.target.value)}
             placeholder="Sem limite"
@@ -123,7 +158,7 @@ export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imo
         <label className="flex flex-col text-sm">
           Mínimo de quartos
           <select
-            className="mt-1 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+            className="mt-1 rounded border border-border-subtle bg-transparent px-2 py-1"
             value={quartos}
             onChange={(e) => setQuartos(e.target.value)}
           >
@@ -152,20 +187,21 @@ export default function BuscaImoveis({ imoveisIniciais }: { imoveisIniciais: Imo
       <AlertaForm filtros={filtrosAtuais} />
 
       {selecionados.length > 0 && (
-        <div className="flex items-center justify-between rounded-lg border border-zinc-900 bg-zinc-900 px-4 py-2 text-sm text-white dark:border-white dark:bg-white dark:text-zinc-900">
+        <div
+          style={{ "--glow-color": "var(--brand)" } as CSSProperties}
+          className="glow-card is-active flex items-center justify-between px-4 py-3 text-sm"
+        >
           <span>
             {selecionados.length} imóvel(is) selecionado(s) para comparar (máx. {MAX_COMPARACAO})
           </span>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSelecionados([])}
-              className="underline underline-offset-2"
-            >
+            <button onClick={() => setSelecionados([])} className="underline underline-offset-2">
               Limpar
             </button>
             <Link
               href={`/comparar?ids=${selecionados.join(",")}`}
-              className="rounded bg-white px-3 py-1 font-medium text-zinc-900 dark:bg-zinc-900 dark:text-white"
+              style={{ "--glow-color": "var(--brand)" } as CSSProperties}
+              className="glow-btn px-3 py-1.5"
             >
               Comparar
             </Link>

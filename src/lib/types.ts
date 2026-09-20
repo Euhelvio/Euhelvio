@@ -50,11 +50,11 @@ export interface Alerta {
   ultimoEnvio: string | null;
 }
 
-export const TIPOS_OPERACAO: { valor: TipoOperacao; rotulo: string }[] = [
-  { valor: "aluguel", rotulo: "Aluguel residencial" },
-  { valor: "venda", rotulo: "Compra e venda" },
-  { valor: "comercial", rotulo: "Comercial" },
-  { valor: "temporada", rotulo: "Temporada" },
+export const TIPOS_OPERACAO: { valor: TipoOperacao; rotulo: string; cor: string }[] = [
+  { valor: "aluguel", rotulo: "Aluguel residencial", cor: "var(--accent-aluguel)" },
+  { valor: "venda", rotulo: "Compra e venda", cor: "var(--accent-venda)" },
+  { valor: "comercial", rotulo: "Comercial", cor: "var(--accent-comercial)" },
+  { valor: "temporada", rotulo: "Temporada", cor: "var(--accent-temporada)" },
 ];
 
 export const MUNICIPIOS_MVP = [

@@ -3,8 +3,8 @@ import type { Imovel } from "@/lib/types";
 import { TIPOS_OPERACAO } from "@/lib/types";
 import { formatarPrecoImovel } from "@/lib/format";
 
-function rotuloTipo(tipoOperacao: Imovel["tipoOperacao"]): string {
-  return TIPOS_OPERACAO.find((t) => t.valor === tipoOperacao)?.rotulo ?? tipoOperacao;
+function infoTipo(tipoOperacao: Imovel["tipoOperacao"]) {
+  return TIPOS_OPERACAO.find((t) => t.valor === tipoOperacao);
 }
 
 export default function ImovelCard({
@@ -16,13 +16,21 @@ export default function ImovelCard({
   comparando?: boolean;
   onToggleComparar?: (id: number) => void;
 }) {
+  const tipo = infoTipo(imovel.tipoOperacao);
+
   return (
-    <div className="rounded-lg border border-zinc-200 p-4 transition-colors hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600">
+    <div className="rounded-xl border border-border-subtle bg-surface p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
       <Link href={`/imoveis/${imovel.id}`} className="block">
-        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-          {rotuloTipo(imovel.tipoOperacao)}
-        </p>
-        <p className="font-semibold">{imovel.titulo}</p>
+        <span
+          className="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
+          style={{
+            color: tipo?.cor,
+            backgroundColor: tipo ? `color-mix(in srgb, ${tipo.cor} 16%, transparent)` : undefined,
+          }}
+        >
+          {tipo?.rotulo ?? imovel.tipoOperacao}
+        </span>
+        <p className="mt-2 font-semibold">{imovel.titulo}</p>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           {imovel.bairro}, {imovel.municipio}
         </p>

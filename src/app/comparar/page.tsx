@@ -42,7 +42,7 @@ export default async function ComparadorImoveis({
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 md:p-6">
       <div>
         <h1 className="text-2xl font-bold">Comparar imóveis</h1>
-        <Link href="/" className="text-sm text-blue-600 underline">
+        <Link href="/" className="text-sm text-brand underline">
           ← Voltar para a busca
         </Link>
       </div>
@@ -57,11 +57,11 @@ export default async function ComparadorImoveis({
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr>
-                <th className="w-40 border-b border-zinc-200 p-2 text-left dark:border-zinc-800" />
+                <th className="w-40 border-b border-border-subtle p-2 text-left" />
                 {imoveis.map((imovel) => (
                   <th
                     key={imovel.id}
-                    className="border-b border-zinc-200 p-2 text-left align-top dark:border-zinc-800"
+                    className="border-b border-border-subtle p-2 text-left align-top"
                   >
                     <Link href={`/imoveis/${imovel.id}`} className="font-semibold underline">
                       {imovel.titulo}
@@ -73,13 +73,13 @@ export default async function ComparadorImoveis({
             <tbody>
               {LINHAS.map((linha) => (
                 <tr key={linha.rotulo}>
-                  <td className="border-b border-zinc-200 p-2 font-medium text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
+                  <td className="border-b border-border-subtle p-2 font-medium text-zinc-600 dark:text-zinc-400">
                     {linha.rotulo}
                   </td>
                   {imoveis.map((imovel) => (
                     <td
                       key={imovel.id}
-                      className="border-b border-zinc-200 p-2 dark:border-zinc-800"
+                      className="border-b border-border-subtle p-2"
                     >
                       {linha.valor(imovel)}
                     </td>

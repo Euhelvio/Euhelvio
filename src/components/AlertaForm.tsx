@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { FiltrosBusca } from "@/lib/types";
+import GlowButton from "./ui/GlowButton";
 
 export default function AlertaForm({ filtros }: { filtros: FiltrosBusca }) {
   const [aberto, setAberto] = useState(false);
@@ -35,7 +36,7 @@ export default function AlertaForm({ filtros }: { filtros: FiltrosBusca }) {
     return (
       <button
         onClick={() => setAberto(true)}
-        className="text-sm text-blue-600 underline underline-offset-2"
+        className="text-sm text-brand underline underline-offset-2"
       >
         Salvar esta busca e receber alertas
       </button>
@@ -48,17 +49,13 @@ export default function AlertaForm({ filtros }: { filtros: FiltrosBusca }) {
         required
         type="email"
         placeholder="seu@email.com"
-        className="rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900"
+        className="rounded border border-border-subtle bg-surface px-2 py-1"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
-      <button
-        type="submit"
-        disabled={status === "enviando"}
-        className="rounded bg-zinc-900 px-3 py-1 font-medium text-white disabled:opacity-50 dark:bg-white dark:text-zinc-900"
-      >
+      <GlowButton type="submit" disabled={status === "enviando"}>
         {status === "enviando" ? "Salvando…" : "Avisar quando surgir novidade"}
-      </button>
+      </GlowButton>
       {status === "erro" && <span className="text-red-600">Não foi possível salvar.</span>}
     </form>
   );

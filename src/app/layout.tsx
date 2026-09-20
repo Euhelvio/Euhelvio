@@ -1,6 +1,8 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { IconeCasa } from "@/components/ui/icones";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,20 +27,29 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-black">
-        <header className="flex items-center justify-between border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
-          <Link href="/" className="font-bold">
-            Floripa Imóveis
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border-subtle bg-surface/85 px-4 py-3 backdrop-blur">
+          <Link href="/" className="flex items-center gap-2 font-bold">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/12 text-brand">
+              <IconeCasa />
+            </span>
+            <span>
+              Floripa <span className="text-brand">Imóveis</span>
+            </span>
           </Link>
-          <nav className="flex gap-4 text-sm">
-            <Link href="/" className="hover:underline">
+          <nav className="flex items-center gap-5 text-sm font-medium">
+            <Link href="/" className="hover:text-brand">
               Buscar imóveis
             </Link>
-            <Link href="/parceiros/cadastrar" className="hover:underline">
-              Cadastrar imóvel
-            </Link>
-            <Link href="/parceiros/painel" className="hover:underline">
+            <Link href="/parceiros/painel" className="hover:text-brand">
               Painel do parceiro
+            </Link>
+            <Link
+              href="/parceiros/cadastrar"
+              style={{ "--glow-color": "var(--brand)" } as CSSProperties}
+              className="glow-btn px-3 py-1.5"
+            >
+              Cadastrar imóvel
             </Link>
           </nav>
         </header>

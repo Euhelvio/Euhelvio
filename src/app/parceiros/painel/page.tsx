@@ -3,6 +3,7 @@ import { listarImoveisPorFonteContato, listarLeadsPorFonteContato } from "@/lib/
 import { formatarPrecoImovel } from "@/lib/format";
 import { TIPOS_OPERACAO } from "@/lib/types";
 import ConfirmarImovelButton from "@/components/ConfirmarImovelButton";
+import GlowButton from "@/components/ui/GlowButton";
 
 const ROTULO_STATUS: Record<string, string> = {
   disponivel: "Disponível",
@@ -34,14 +35,9 @@ export default async function PainelParceiro({
           defaultValue={contato ?? ""}
           placeholder="Telefone/WhatsApp cadastrado"
           required
-          className="flex-1 rounded border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className="flex-1 rounded border border-border-subtle bg-transparent px-3 py-2 text-sm"
         />
-        <button
-          type="submit"
-          className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-zinc-900"
-        >
-          Entrar
-        </button>
+        <GlowButton type="submit">Entrar</GlowButton>
       </form>
 
       {contato && <ConteudoPainel contato={contato} />}
@@ -74,7 +70,7 @@ async function ConteudoPainel({ contato }: { contato: string }) {
         {imoveis.map((imovel) => (
           <div
             key={imovel.id}
-            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-800"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border-subtle bg-surface p-3 text-sm"
           >
             <div>
               <Link href={`/imoveis/${imovel.id}`} className="font-medium underline">
@@ -102,33 +98,33 @@ async function ConteudoPainel({ contato }: { contato: string }) {
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="text-left text-zinc-500">
-                  <th className="border-b border-zinc-200 p-2 dark:border-zinc-800">Imóvel</th>
-                  <th className="border-b border-zinc-200 p-2 dark:border-zinc-800">Nome</th>
-                  <th className="border-b border-zinc-200 p-2 dark:border-zinc-800">Contato</th>
-                  <th className="border-b border-zinc-200 p-2 dark:border-zinc-800">Mensagem</th>
-                  <th className="border-b border-zinc-200 p-2 dark:border-zinc-800">Data</th>
+                  <th className="border-b border-border-subtle p-2">Imóvel</th>
+                  <th className="border-b border-border-subtle p-2">Nome</th>
+                  <th className="border-b border-border-subtle p-2">Contato</th>
+                  <th className="border-b border-border-subtle p-2">Mensagem</th>
+                  <th className="border-b border-border-subtle p-2">Data</th>
                 </tr>
               </thead>
               <tbody>
                 {leads.map((lead) => (
                   <tr key={lead.id}>
-                    <td className="border-b border-zinc-200 p-2 dark:border-zinc-800">
+                    <td className="border-b border-border-subtle p-2">
                       <Link href={`/imoveis/${lead.imovelId}`} className="underline">
                         {lead.imovelTitulo}
                       </Link>
                     </td>
-                    <td className="border-b border-zinc-200 p-2 dark:border-zinc-800">
+                    <td className="border-b border-border-subtle p-2">
                       {lead.nome}
                     </td>
-                    <td className="border-b border-zinc-200 p-2 dark:border-zinc-800">
+                    <td className="border-b border-border-subtle p-2">
                       {lead.email}
                       <br />
                       {lead.telefone}
                     </td>
-                    <td className="border-b border-zinc-200 p-2 dark:border-zinc-800">
+                    <td className="border-b border-border-subtle p-2">
                       {lead.mensagem}
                     </td>
-                    <td className="border-b border-zinc-200 p-2 dark:border-zinc-800">
+                    <td className="border-b border-border-subtle p-2">
                       {lead.criadoEm}
                     </td>
                   </tr>

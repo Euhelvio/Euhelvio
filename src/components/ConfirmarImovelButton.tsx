@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import GlowButton from "./ui/GlowButton";
 
 export default function ConfirmarImovelButton({
   imovelId,
@@ -31,12 +32,8 @@ export default function ConfirmarImovelButton({
   }
 
   return (
-    <button
-      onClick={confirmar}
-      disabled={enviando}
-      className="rounded bg-zinc-900 px-2 py-1 text-xs font-medium text-white disabled:opacity-50 dark:bg-white dark:text-zinc-900"
-    >
+    <GlowButton onClick={confirmar} disabled={enviando} className="px-2 py-1 text-xs">
       {enviando ? "Confirmando…" : "Confirmar que ainda está disponível"}
-    </button>
+    </GlowButton>
   );
 }
