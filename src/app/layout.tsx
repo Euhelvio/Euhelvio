@@ -1,8 +1,8 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Image from "next/image";
 import Link from "next/link";
-import { IconeCasa } from "@/components/ui/icones";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,8 +30,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border-subtle bg-surface/85 px-4 py-3 backdrop-blur">
           <Link href="/" className="flex items-center gap-2 font-bold">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/12 text-brand">
-              <IconeCasa />
+            <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white p-1 shadow-sm ring-1 ring-border-subtle">
+              <Image src="/marca/logo.webp" alt="" width={40} height={40} className="h-full w-full object-contain" />
             </span>
             <span>
               Floripa <span className="text-brand">Imóveis</span>
