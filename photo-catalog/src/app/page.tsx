@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { resolveMissingLocations, type GeocodeProgress } from "@/lib/geocode";
 import type { PhotoCategory, PhotoRecord } from "@/lib/types";
 import ImportPanel from "@/components/ImportPanel";
+import BackupPanel from "@/components/BackupPanel";
 import FilterBar, { type Filters } from "@/components/FilterBar";
 import Gallery from "@/components/Gallery";
 import Viewer from "@/components/Viewer";
@@ -67,6 +68,8 @@ export default function Home() {
         </header>
 
         <ImportPanel />
+
+        <BackupPanel photoCount={photos.length} />
 
         <FilterBar
           filters={filters}
