@@ -20,24 +20,55 @@ export const CATEGORY_LABELS: Record<PhotoCategory, string> = {
   outro: "Outro",
 };
 
-export interface PhotoRecord {
+interface PhotoBase {
   id: string;
   fileName: string;
-  mimeType: string;
-  blob: Blob;
-  thumbBlob: Blob;
-  width: number;
-  height: number;
   takenAt: number;
   lat?: number;
   lng?: number;
   locationName?: string;
   category: PhotoCategory;
+}
+
+export interface PhotoRecord extends PhotoBase {
+  kind: "local";
+  mimeType: string;
+  blob: Blob;
+  thumbBlob: Blob;
+  width: number;
+  height: number;
   albumName?: string;
   importedAt: number;
 }
 
 export type PhotoListItem = Omit<PhotoRecord, "blob" | "thumbBlob">;
+
+/** Metadata for a photo browsed live from a connected Google Drive folder —
+ * no image bytes are stored locally; they're fetched on demand. */
+export interface DriveFileMeta extends PhotoBase {
+  kind: "drive";
+  mimeType: string;
+  width?: number;
+  height?: number;
+  thumbnailLink?: string;
+  size?: number;
+}
+
+/** What the gallery/viewer components render, regardless of where the bytes
+ * actually live. */
+export type GalleryItem = PhotoRecord | DriveFileMeta;
+
+/** Supplies image bytes and mutations for a GalleryItem, so Gallery/Viewer
+ * don't need to know whether they're showing locally-imported photos or
+ * photos browsed live from Drive. */
+export interface BlobSource {
+  getThumb(item: GalleryItem): Promise<Blob | undefined>;
+  getFull(item: GalleryItem): Promise<Blob | undefined>;
+  setCategory(item: GalleryItem, category: PhotoCategory): Promise<void>;
+  /** Persists an edited copy back into the catalog. Omit to hide that action
+   * (e.g. Drive browsing doesn't have a "local catalog" to save into). */
+  saveCopy?(item: GalleryItem, blob: Blob): Promise<void>;
+}
 
 export interface GeocodeCacheEntry {
   key: string;

@@ -1,5 +1,12 @@
 import { db } from "./db";
 
+interface Geotaggable {
+  id: string;
+  lat?: number;
+  lng?: number;
+  locationName?: string;
+}
+
 // Uses OpenStreetMap Nominatim (free, no API key). Its usage policy caps
 // requests at ~1/s and is meant for light, non-commercial use — fine for a
 // personal catalog, but keep the queue serialized and the cache aggressive.
@@ -55,19 +62,24 @@ export interface GeocodeProgress {
   currentLabel?: string;
 }
 
-/** Resolves location names for every stored photo that has coordinates but no label yet. */
+/** Resolves location names for whatever rows `loadRows` returns that have
+ * coordinates but no label yet, persisting each result via `applyLabel`.
+ * Takes plain callbacks (rather than a Dexie Table directly) so it works the
+ * same way for the local-import catalog and the Drive-browsing one. */
 export async function resolveMissingLocations(
+  loadRows: () => Promise<Geotaggable[]>,
+  applyLabel: (ids: string[], label: string) => Promise<void>,
   onProgress?: (p: GeocodeProgress) => void
 ): Promise<void> {
-  const photos = await db.photos
-    .filter((p) => p.lat !== undefined && p.lng !== undefined && !p.locationName)
-    .toArray();
+  const rows = (await loadRows()).filter(
+    (p) => p.lat !== undefined && p.lng !== undefined && !p.locationName
+  );
 
   const buckets = new Map<string, { lat: number; lng: number; ids: string[] }>();
-  for (const photo of photos) {
-    const key = cacheKey(photo.lat!, photo.lng!);
-    const bucket = buckets.get(key) ?? { lat: photo.lat!, lng: photo.lng!, ids: [] };
-    bucket.ids.push(photo.id);
+  for (const row of rows) {
+    const key = cacheKey(row.lat!, row.lng!);
+    const bucket = buckets.get(key) ?? { lat: row.lat!, lng: row.lng!, ids: [] };
+    bucket.ids.push(row.id);
     buckets.set(key, bucket);
   }
 
@@ -78,7 +90,7 @@ export async function resolveMissingLocations(
     try {
       const label = await resolveLabel(bucket.lat, bucket.lng);
       progress.currentLabel = label;
-      await db.photos.where("id").anyOf(bucket.ids).modify({ locationName: label });
+      await applyLabel(bucket.ids, label);
     } catch {
       // Leave unresolved; a later call will retry.
     } finally {

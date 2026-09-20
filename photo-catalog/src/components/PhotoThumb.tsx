@@ -1,16 +1,37 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useBlobImage } from "@/lib/useObjectUrl";
-import type { PhotoRecord } from "@/lib/types";
+import type { BlobSource, GalleryItem } from "@/lib/types";
 
 export default function PhotoThumb({
-  photo,
+  item,
+  blobSource,
   onClick,
 }: {
-  photo: PhotoRecord;
+  item: GalleryItem;
+  blobSource: BlobSource;
   onClick: () => void;
 }) {
-  const imgRef = useBlobImage(photo.thumbBlob);
+  const [blob, setBlob] = useState<Blob | undefined>(undefined);
+  const [loadedForId, setLoadedForId] = useState<string | null>(null);
+  const imgRef = useBlobImage(blob);
+
+  if (loadedForId !== item.id) {
+    setLoadedForId(item.id);
+    setBlob(undefined);
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    blobSource.getThumb(item).then((b) => {
+      if (!cancelled) setBlob(b);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item.id]);
 
   return (
     <button
@@ -20,7 +41,7 @@ export default function PhotoThumb({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         ref={imgRef}
-        alt={photo.fileName}
+        alt={item.fileName}
         loading="lazy"
         className="w-full h-full object-cover group-hover:scale-105 transition-transform"
       />

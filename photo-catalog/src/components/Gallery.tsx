@@ -1,28 +1,31 @@
 "use client";
 
-import type { PhotoRecord } from "@/lib/types";
+import type { BlobSource, GalleryItem } from "@/lib/types";
 import PhotoThumb from "./PhotoThumb";
 
 export default function Gallery({
-  photos,
+  items,
+  blobSource,
   onOpen,
+  emptyMessage,
 }: {
-  photos: PhotoRecord[];
+  items: GalleryItem[];
+  blobSource: BlobSource;
   onOpen: (index: number) => void;
+  emptyMessage?: string;
 }) {
-  if (photos.length === 0) {
+  if (items.length === 0) {
     return (
       <p className="text-sm opacity-60 py-12 text-center">
-        Nenhuma foto para exibir. Importe um arquivo do Google Takeout ou
-        ajuste os filtros.
+        {emptyMessage ?? "Nenhuma foto para exibir."}
       </p>
     );
   }
 
   return (
     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-      {photos.map((photo, i) => (
-        <PhotoThumb key={photo.id} photo={photo} onClick={() => onOpen(i)} />
+      {items.map((item, i) => (
+        <PhotoThumb key={item.id} item={item} blobSource={blobSource} onClick={() => onOpen(i)} />
       ))}
     </div>
   );
