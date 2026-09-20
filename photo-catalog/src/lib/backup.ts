@@ -47,6 +47,7 @@ export async function exportBackup(
     const filePath = `${BLOBS_DIR}/${photo.id}`;
     await zipWriter.add(filePath, new BlobReader(photo.blob));
     manifest.push({
+      kind: "local",
       id: photo.id,
       fileName: photo.fileName,
       mimeType: photo.mimeType,
@@ -126,6 +127,7 @@ export async function importBackup(
     }
 
     batch.push({
+      kind: "local",
       id: entry.id,
       fileName: entry.fileName,
       mimeType: entry.mimeType,

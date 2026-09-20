@@ -4,12 +4,17 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useMemo, useState } from "react";
 import { db } from "@/lib/db";
 import { resolveMissingLocations, type GeocodeProgress } from "@/lib/geocode";
-import type { PhotoCategory, PhotoRecord } from "@/lib/types";
+import { localBlobSource } from "@/lib/localBlobSource";
+import { useDriveSession } from "@/lib/useDriveSession";
+import type { GalleryItem, PhotoCategory } from "@/lib/types";
 import ImportPanel from "@/components/ImportPanel";
 import BackupPanel from "@/components/BackupPanel";
+import DriveConnectPanel from "@/components/DriveConnectPanel";
 import FilterBar, { type Filters } from "@/components/FilterBar";
 import Gallery from "@/components/Gallery";
 import Viewer from "@/components/Viewer";
+
+type Mode = "local" | "drive";
 
 const EMPTY_FILTERS: Filters = {
   dateFrom: "",
@@ -19,41 +24,76 @@ const EMPTY_FILTERS: Filters = {
 };
 
 export default function Home() {
-  const allPhotos = useLiveQuery(() => db.photos.orderBy("takenAt").reverse().toArray(), []);
+  const [mode, setMode] = useState<Mode>("local");
+  const drive = useDriveSession();
+
+  const allLocalPhotos = useLiveQuery(() => db.photos.orderBy("takenAt").reverse().toArray(), []);
+  const allDriveFiles = useLiveQuery(
+    () => db.driveFiles.orderBy("takenAt").reverse().toArray(),
+    []
+  );
+
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [geoProgress, setGeoProgress] = useState<GeocodeProgress | null>(null);
 
-  const photos = useMemo(() => allPhotos ?? [], [allPhotos]);
+  const localPhotos = useMemo(() => allLocalPhotos ?? [], [allLocalPhotos]);
+  const driveFiles = useMemo(() => allDriveFiles ?? [], [allDriveFiles]);
+
+  const items: GalleryItem[] = mode === "local" ? localPhotos : driveFiles;
+  const blobSource = mode === "local" ? localBlobSource : drive.blobSource;
+
+  // Switching modes clears filters/viewer so a selection from one catalog
+  // doesn't linger in the other ("adjust state during render" pattern —
+  // see the note on shownIndex in Viewer.tsx for why not an effect).
+  const [shownMode, setShownMode] = useState(mode);
+  if (shownMode !== mode) {
+    setShownMode(mode);
+    setFilters(EMPTY_FILTERS);
+    setViewerIndex(null);
+  }
 
   const filtered = useMemo(() => {
     const from = filters.dateFrom ? new Date(filters.dateFrom).getTime() : undefined;
     const to = filters.dateTo ? new Date(filters.dateTo).getTime() + 86_400_000 : undefined;
     const locationQuery = filters.locationQuery.trim().toLowerCase();
 
-    return photos.filter((p: PhotoRecord) => {
+    return items.filter((p) => {
       if (from !== undefined && p.takenAt < from) return false;
       if (to !== undefined && p.takenAt > to) return false;
       if (filters.categories.size > 0 && !filters.categories.has(p.category)) return false;
       if (locationQuery && !p.locationName?.toLowerCase().includes(locationQuery)) return false;
       return true;
     });
-  }, [photos, filters]);
+  }, [items, filters]);
 
   const locationOptions = useMemo(() => {
     const set = new Set<string>();
-    for (const p of photos) if (p.locationName) set.add(p.locationName);
+    for (const p of items) if (p.locationName) set.add(p.locationName);
     return Array.from(set).sort();
-  }, [photos]);
+  }, [items]);
 
   const pendingLocationCount = useMemo(
-    () => photos.filter((p) => p.lat !== undefined && p.lng !== undefined && !p.locationName).length,
-    [photos]
+    () => items.filter((p) => p.lat !== undefined && p.lng !== undefined && !p.locationName).length,
+    [items]
   );
 
   async function handleResolveLocations() {
     setGeoProgress({ total: 0, processed: 0 });
-    await resolveMissingLocations((p) => setGeoProgress(p));
+    if (mode === "local") {
+      await resolveMissingLocations(
+        () => db.photos.toArray(),
+        (ids, label) => db.photos.where("id").anyOf(ids).modify({ locationName: label }).then(() => {}),
+        (p) => setGeoProgress(p)
+      );
+    } else {
+      await resolveMissingLocations(
+        () => db.driveFiles.toArray(),
+        (ids, label) =>
+          db.driveFiles.where("id").anyOf(ids).modify({ locationName: label }).then(() => {}),
+        (p) => setGeoProgress(p)
+      );
+    }
     setGeoProgress(null);
   }
 
@@ -63,13 +103,37 @@ export default function Home() {
         <header>
           <h1 className="text-2xl font-semibold">Catálogo de Fotos</h1>
           <p className="text-sm opacity-70">
-            Importado do Google Takeout, armazenado localmente no seu navegador.
+            Importe do Google Takeout, ou navegue direto de uma pasta do Google Drive.
           </p>
         </header>
 
-        <ImportPanel />
+        <div className="flex gap-1 border-b border-black/10 dark:border-white/15">
+          <ModeTab active={mode === "local"} onClick={() => setMode("local")}>
+            Importado localmente
+          </ModeTab>
+          <ModeTab active={mode === "drive"} onClick={() => setMode("drive")}>
+            Google Drive
+          </ModeTab>
+        </div>
 
-        <BackupPanel photoCount={photos.length} />
+        {mode === "local" ? (
+          <>
+            <ImportPanel />
+            <BackupPanel photoCount={localPhotos.length} />
+          </>
+        ) : (
+          <DriveConnectPanel
+            connected={drive.connected}
+            connecting={drive.connecting}
+            syncing={drive.syncing}
+            syncedCount={drive.syncedCount}
+            folderName={drive.folderName}
+            error={drive.error}
+            onChooseFolder={drive.chooseFolder}
+            onSync={drive.sync}
+            onDisconnect={drive.disconnect}
+          />
+        )}
 
         <FilterBar
           filters={filters}
@@ -88,17 +152,50 @@ export default function Home() {
           </p>
         )}
 
-        <Gallery photos={filtered} onOpen={setViewerIndex} />
+        <Gallery
+          items={filtered}
+          blobSource={blobSource}
+          onOpen={setViewerIndex}
+          emptyMessage={
+            mode === "local"
+              ? "Nenhuma foto para exibir. Importe um arquivo do Google Takeout ou ajuste os filtros."
+              : "Nenhuma foto para exibir. Conecte uma pasta do Google Drive ou ajuste os filtros."
+          }
+        />
       </main>
 
       {viewerIndex !== null && filtered[viewerIndex] && (
         <Viewer
-          photos={filtered}
+          items={filtered}
+          blobSource={blobSource}
           index={viewerIndex}
           onIndexChange={setViewerIndex}
           onClose={() => setViewerIndex(null)}
         />
       )}
     </div>
+  );
+}
+
+function ModeTab({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`text-sm px-3 py-2 border-b-2 -mb-px ${
+        active
+          ? "border-blue-600 font-medium"
+          : "border-transparent opacity-60 hover:opacity-100"
+      }`}
+    >
+      {children}
+    </button>
   );
 }

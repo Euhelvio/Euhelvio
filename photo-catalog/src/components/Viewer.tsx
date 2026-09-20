@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { db } from "@/lib/db";
 import { downloadBlob } from "@/lib/download";
 import { renderFilteredBlob } from "@/lib/filters";
-import { createThumbnail } from "@/lib/thumbnail";
 import { useBlobImage } from "@/lib/useObjectUrl";
 import {
   adjustmentsToCssFilter,
@@ -12,27 +10,39 @@ import {
   DEFAULT_ADJUSTMENTS,
   hasActiveAdjustments,
   PHOTO_CATEGORIES,
+  type BlobSource,
+  type GalleryItem,
   type ImageAdjustments,
   type PhotoCategory,
-  type PhotoRecord,
 } from "@/lib/types";
 
 const SWIPE_THRESHOLD = 60;
 const ZOOM_SCALE = 2.5;
 
 export default function Viewer({
-  photos,
+  items,
+  blobSource,
   index,
   onIndexChange,
   onClose,
 }: {
-  photos: PhotoRecord[];
+  items: GalleryItem[];
+  blobSource: BlobSource;
   index: number;
   onIndexChange: (i: number) => void;
   onClose: () => void;
 }) {
-  const photo = photos[index];
-  const imgRef = useBlobImage(photo?.blob);
+  const item = items[index];
+  const [fullBlob, setFullBlob] = useState<Blob | undefined>(undefined);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadedForId, setLoadedForId] = useState<string | undefined>(undefined);
+  const imgRef = useBlobImage(fullBlob);
+
+  if (loadedForId !== item?.id) {
+    setLoadedForId(item?.id);
+    setFullBlob(undefined);
+    setLoadError(null);
+  }
 
   const [adjustments, setAdjustments] = useState<ImageAdjustments>(DEFAULT_ADJUSTMENTS);
   const [editOpen, setEditOpen] = useState(false);
@@ -56,6 +66,25 @@ export default function Viewer({
   }
 
   useEffect(() => {
+    let cancelled = false;
+    if (!item) return;
+    blobSource
+      .getFull(item)
+      .then((blob) => {
+        if (cancelled) return;
+        if (blob) setFullBlob(blob);
+        else setLoadError("Não foi possível carregar esta foto.");
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError("Não foi possível carregar esta foto.");
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item?.id]);
+
+  useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
       else if (e.key === "ArrowLeft") goTo(index - 1);
@@ -64,10 +93,10 @@ export default function Viewer({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, photos.length]);
+  }, [index, items.length]);
 
   function goTo(next: number) {
-    if (next < 0 || next >= photos.length) return;
+    if (next < 0 || next >= items.length) return;
     onIndexChange(next);
   }
 
@@ -94,29 +123,17 @@ export default function Viewer({
   const dirty = hasActiveAdjustments(adjustments);
 
   async function getOutputBlob(): Promise<Blob> {
-    if (!photo) throw new Error("Nenhuma foto selecionada");
-    return dirty ? renderFilteredBlob(photo.blob, adjustments) : photo.blob;
+    if (!fullBlob) throw new Error("Foto ainda não carregada");
+    return dirty ? renderFilteredBlob(fullBlob, adjustments) : fullBlob;
   }
 
   async function handleSaveCopy() {
-    if (!photo) return;
+    if (!item || !blobSource.saveCopy) return;
     setBusy(true);
     setMessage(null);
     try {
       const blob = await getOutputBlob();
-      const thumb = await createThumbnail(blob);
-      const copy: PhotoRecord = {
-        ...photo,
-        id: `${photo.id}::edit-${Date.now()}`,
-        fileName: `editada-${photo.fileName}`,
-        mimeType: "image/jpeg",
-        blob,
-        thumbBlob: thumb?.thumbBlob ?? photo.thumbBlob,
-        width: thumb?.width ?? photo.width,
-        height: thumb?.height ?? photo.height,
-        importedAt: Date.now(),
-      };
-      await db.photos.put(copy);
+      await blobSource.saveCopy(item, blob);
       setMessage("Cópia salva no catálogo.");
     } catch {
       setMessage("Não foi possível salvar a cópia.");
@@ -126,17 +143,17 @@ export default function Viewer({
   }
 
   async function handleShare() {
-    if (!photo) return;
+    if (!item) return;
     setBusy(true);
     setMessage(null);
     try {
       const blob = await getOutputBlob();
-      const file = new File([blob], photo.fileName.replace(/\.\w+$/, ".jpg"), {
+      const file = new File([blob], item.fileName.replace(/\.\w+$/, ".jpg"), {
         type: blob.type || "image/jpeg",
       });
 
       if (navigator.canShare?.({ files: [file] }) && navigator.share) {
-        await navigator.share({ files: [file], title: photo.fileName });
+        await navigator.share({ files: [file], title: item.fileName });
       } else {
         downloadBlob(blob, file.name);
         setMessage("Compartilhamento direto não suportado; baixamos o arquivo.");
@@ -151,11 +168,11 @@ export default function Viewer({
   }
 
   async function handleCategoryChange(category: PhotoCategory) {
-    if (!photo) return;
-    await db.photos.update(photo.id, { category });
+    if (!item) return;
+    await blobSource.setCategory(item, category);
   }
 
-  if (!photo) return null;
+  if (!item) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
@@ -164,7 +181,7 @@ export default function Viewer({
           ✕ Fechar
         </button>
         <span className="text-xs opacity-70">
-          {index + 1} / {photos.length}
+          {index + 1} / {items.length}
         </span>
         <div className="flex gap-1">
           <button
@@ -197,7 +214,7 @@ export default function Viewer({
             ‹
           </button>
         )}
-        {index < photos.length - 1 && (
+        {index < items.length - 1 && (
           <button
             onClick={() => goTo(index + 1)}
             className="absolute right-2 z-10 text-white/70 hover:text-white text-3xl px-2"
@@ -207,10 +224,14 @@ export default function Viewer({
           </button>
         )}
 
+        {loadError && !fullBlob && (
+          <p className="text-sm text-white/70">{loadError}</p>
+        )}
+
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           ref={imgRef}
-          alt={photo.fileName}
+          alt={item.fileName}
           className="max-w-full max-h-full object-contain transition-transform"
           style={{ filter: cssFilter, transform: `scale(${scale})` }}
           draggable={false}
@@ -219,12 +240,12 @@ export default function Viewer({
 
       {infoOpen && (
         <div className="px-4 py-3 bg-black/80 text-white/90 text-sm flex flex-wrap gap-x-6 gap-y-2">
-          <span>{new Date(photo.takenAt).toLocaleString("pt-BR")}</span>
-          <span>{photo.locationName ?? "Local não resolvido"}</span>
+          <span>{new Date(item.takenAt).toLocaleString("pt-BR")}</span>
+          <span>{item.locationName ?? "Local não resolvido"}</span>
           <label className="flex items-center gap-2">
             Tipo:
             <select
-              value={photo.category}
+              value={item.category}
               onChange={(e) => handleCategoryChange(e.target.value as PhotoCategory)}
               className="bg-black/40 border border-white/20 rounded px-1 py-0.5"
             >
@@ -300,16 +321,18 @@ export default function Viewer({
 
             <div className="flex-1" />
 
-            <button
-              onClick={handleSaveCopy}
-              disabled={busy || !dirty}
-              className="text-xs px-3 py-1.5 rounded bg-white/15 hover:bg-white/25 disabled:opacity-40"
-            >
-              Salvar cópia no catálogo
-            </button>
+            {blobSource.saveCopy && (
+              <button
+                onClick={handleSaveCopy}
+                disabled={busy || !dirty || !fullBlob}
+                className="text-xs px-3 py-1.5 rounded bg-white/15 hover:bg-white/25 disabled:opacity-40"
+              >
+                Salvar cópia no catálogo
+              </button>
+            )}
             <button
               onClick={handleShare}
-              disabled={busy}
+              disabled={busy || !fullBlob}
               className="text-xs px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-500 disabled:opacity-40"
             >
               Compartilhar

@@ -199,6 +199,7 @@ export async function importTakeoutZip(
     const meta = sidecar ? await parseSidecar(sidecar) : {};
 
     const record: PhotoRecord = {
+      kind: "local",
       id: entry.filename,
       fileName: baseNameOf(entry.filename),
       mimeType: mime,
